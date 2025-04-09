@@ -99,7 +99,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-5">
         <div className="container py-5">
           <h2 className="display-6 fw-semibold text-center mb-5 text-success">
@@ -107,12 +106,9 @@ const Home = () => {
           </h2>
           <div className="row row-cols-1 row-cols-md-2 g-5">
             <div className="col d-flex align-items-start gap-3">
-              <img
-                src="https://via.placeholder.com/80?text=🌾"
-                alt="Market Access"
-                className="rounded-circle"
-                style={{ width: '80px', height: '80px' }}
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" fill="currentColor" class="bi bi-basket2-fill" viewBox="0 0 16 16">
+            <path d="M5.929 1.757a.5.5 0 1 0-.858-.514L2.217 6H.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h.623l1.844 6.456A.75.75 0 0 0 3.69 15h8.622a.75.75 0 0 0 .722-.544L14.877 8h.623a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1.717L10.93 1.243a.5.5 0 1 0-.858.514L12.617 6H3.383zM4 10a1 1 0 0 1 2 0v2a1 1 0 1 1-2 0zm3 0a1 1 0 0 1 2 0v2a1 1 0 1 1-2 0zm4-1a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1"/>
+            </svg>
               <div>
                 <h3 className="fw-semibold text-dark mb-2">Market Access</h3>
                 <p className="text-muted">
@@ -121,40 +117,32 @@ const Home = () => {
               </div>
             </div>
             <div className="col d-flex align-items-start gap-3">
-              <img
-                src="https://via.placeholder.com/80?text=🧑‍🌾"
-                alt="Expert Support"
-                className="rounded-circle"
-                style={{ width: '80px', height: '80px' }}
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+            </svg>
               <div>
                 <h3 className="fw-semibold text-dark mb-2">Expert Support</h3>
                 <p className="text-muted">
-                  Consult with agronomists and specialists to improve farming techniques.
+                  Consult with agronomists and specialists as well as an intergrated AI Chatbot to improve farming techniques.
                 </p>
               </div>
             </div>
             <div className="col d-flex align-items-start gap-3">
-              <img
-                src="https://via.placeholder.com/80?text=💰"
-                alt="Secure Payments"
-                className="rounded-circle"
-                style={{ width: '80px', height: '80px' }}
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" fill="currentColor" class="bi bi-currency-exchange" viewBox="0 0 16 16">
+            <path d="M0 5a5 5 0 0 0 4.027 4.905 6.5 6.5 0 0 1 .544-2.073C3.695 7.536 3.132 6.864 3 5.91h-.5v-.426h.466V5.05q-.001-.07.004-.135H2.5v-.427h.511C3.236 3.24 4.213 2.5 5.681 2.5c.316 0 .59.031.819.085v.733a3.5 3.5 0 0 0-.815-.082c-.919 0-1.538.466-1.734 1.252h1.917v.427h-1.98q-.004.07-.003.147v.422h1.983v.427H3.93c.118.602.468 1.03 1.005 1.229a6.5 6.5 0 0 1 4.97-3.113A5.002 5.002 0 0 0 0 5m16 5.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0m-7.75 1.322c.069.835.746 1.485 1.964 1.562V14h.54v-.62c1.259-.086 1.996-.74 1.996-1.69 0-.865-.563-1.31-1.57-1.54l-.426-.1V8.374c.54.06.884.347.966.745h.948c-.07-.804-.779-1.433-1.914-1.502V7h-.54v.629c-1.076.103-1.808.732-1.808 1.622 0 .787.544 1.288 1.45 1.493l.358.085v1.78c-.554-.08-.92-.376-1.003-.787zm1.96-1.895c-.532-.12-.82-.364-.82-.732 0-.41.311-.719.824-.809v1.54h-.005zm.622 1.044c.645.145.943.38.943.796 0 .474-.37.8-1.02.86v-1.674z"/>
+            </svg>
               <div>
                 <h3 className="fw-semibold text-dark mb-2">Secure Payments</h3>
                 <p className="text-muted">
-                  Integrated with M-Pesa for fast, reliable transactions.
+                  Integrated with M-Pesa,Visa,Paypal for fast, reliable transactions.
                 </p>
               </div>
             </div>
             <div className="col d-flex align-items-start gap-3">
-              <img
-                src="https://via.placeholder.com/80?text=📱"
-                alt="Mobile Friendly"
-                className="rounded-circle"
-                style={{ width: '80px', height: '80px' }}
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" fill="currentColor" class="bi bi-phone" viewBox="0 0 16 16">
+                <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                </svg>
               <div>
                 <h3 className="fw-semibold text-dark mb-2">Mobile Friendly</h3>
                 <p className="text-muted">

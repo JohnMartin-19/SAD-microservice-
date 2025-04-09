@@ -6,6 +6,7 @@ import FarmerDashboard from './pages/FarmerDashboard';
 import ExpertConsultation from './pages/ExpertConsultation';
 import Signup from './pages/sign_up'
 import Login from './pages/login'
+import Checkout from './pages/checkout'
 
 const App = () => (
   <Router>
@@ -16,6 +17,8 @@ const App = () => (
       <Route path="/experts" element={<ExpertConsultation />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/checkout" element={<Checkout />} />
+      
     </Routes>
   </Router>
 );

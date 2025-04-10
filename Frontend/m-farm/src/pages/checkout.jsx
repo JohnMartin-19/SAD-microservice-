@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+// import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 const Checkout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,12 +52,24 @@ const Checkout = () => {
     // Simulate payment processing based on selected method
     switch (paymentMethod) {
       case 'mpesa':
+        const response = await fetch('http://your-api-endpoint/mpesa/c2b', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            amount: totalAmountState,
+            phone: userDetails.phone,
+            }),
+        });
+        const data = await response.json();
         // M-Pesa Daraja API C2B (placeholder)
         console.log('Processing M-Pesa payment...', { amount: totalAmountState, phone: userDetails.phone });
         // Example: await fetch('http://your-api-endpoint/mpesa/c2b', { ... });
         alert('M-Pesa payment initiated. Check your phone to complete.');
+        alert(data.message); // e.g., "Enter PIN on your phone"
         break;
+        
       case 'paypal':
+        
         // PayPal (requires SDK integration)
         console.log('Processing PayPal payment...', { amount: totalAmountState });
         alert('PayPal payment would open here.');

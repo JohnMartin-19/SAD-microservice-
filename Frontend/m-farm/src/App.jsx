@@ -7,6 +7,7 @@ import ExpertConsultation from './pages/ExpertConsultation';
 import Signup from './pages/sign_up'
 import Login from './pages/login'
 import Checkout from './pages/checkout'
+import Profile from './pages/profile';
 
 const App = () => (
   <Router>
@@ -18,6 +19,7 @@ const App = () => (
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/profile" element={<Profile />} />
       
     </Routes>
   </Router>

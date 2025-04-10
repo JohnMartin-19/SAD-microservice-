@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Sidebar from '../components/Sidebar';
-
 
 const Marketplace = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,6 +14,27 @@ const Marketplace = () => {
   ]);
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
+
+  // Animation variants
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+  };
+
+  const staggerChildren = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const scaleUp = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: { scale: 1, opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+  };
 
   // Load cart from sessionStorage on mount
   useEffect(() => {
@@ -31,18 +52,8 @@ const Marketplace = () => {
   // Simulate fetching products from API
   useEffect(() => {
     // Replace with real API call
-    /*
-    fetch('http://your-api-endpoint/api/products/', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then(response => response.json())
-      .then(data => setProducts(data.map(p => ({ ...p, price: parseInt(p.price) }))))
-      .catch(error => console.error('Error fetching products:', error));
-    */
   }, []);
 
-  // Add item to cart
   const addToCart = (product) => {
     const existingItem = cart.find(item => item.id === product.id);
     if (existingItem) {
@@ -52,26 +63,23 @@ const Marketplace = () => {
     } else {
       setCart([...cart, { ...product, quantity: 1 }]);
     }
-    setShowCart(false); // Show cart after adding
+    setShowCart(false); // Keep marketplace view after adding
   };
 
-  // Remove item from cart
   const removeFromCart = (id) => {
     setCart(cart.filter(item => item.id !== id));
   };
 
-  // Update item quantity
   const updateQuantity = (id, delta) => {
     setCart(cart.map(item => {
       if (item.id === id) {
-        const newQuantity = Math.max(1, item.quantity + delta); // Minimum 1
+        const newQuantity = Math.max(1, item.quantity + delta);
         return { ...item, quantity: newQuantity };
       }
       return item;
     }));
   };
 
-  // Calculate total amount
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
@@ -79,42 +87,55 @@ const Marketplace = () => {
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
 
       {/* Main Content */}
-      <div className="container py-5" style={{ maxWidth: '70%' }}>
+      <motion.div
+        className="container py-5"
+        style={{ maxWidth: '70%' }}
+        initial="hidden"
+        animate="visible"
+        variants={staggerChildren}
+      >
         {/* Search Bar */}
-        <div className="mb-4 position-relative">
-          <input style={{ maxWidth: '70%' }}
+        <motion.div className="mb-4 position-relative" variants={fadeInUp}>
+          <input
             type="text"
             className="form-control form-control-lg rounded-pill shadow-sm"
             placeholder="Search by crop, location, or price"
+            style={{ maxWidth: '70%' }}
           />
           <br />
-          <button
+          <motion.button
             className="btn btn-success position-absolute top-0 end-0 mt-2 me-2 shadow-sm"
             onClick={() => setShowCart(true)}
+            variants={scaleUp}
+            whileHover={{ scale: 1.05 }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart-fill" viewBox="0 0 16 16">
-            <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="currentColor"
+              className="bi bi-cart-fill"
+              viewBox="0 0 16 16"
+            >
+              <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2" />
             </svg>
-             ({cart.length})
-          </button>
-          
-        </div>
-        
+            ({cart.length})
+          </motion.button>
+        </motion.div>
 
         {/* Marketplace or Cart View */}
         {!showCart ? (
-          <div className="row g-4">
+          <motion.div className="row g-4" variants={staggerChildren}>
             {/* Sidebar */}
-            <div className="col-md-3">
+            <motion.div className="col-md-3" variants={fadeInUp}>
               <Sidebar />
-              
-            </div>
+            </motion.div>
 
             {/* Product Grid */}
-            <div className="col-md-9">
-              <div className="row row-cols-1 row-cols-md-3 g-4">
+            <motion.div className="col-md-9" variants={staggerChildren}>
+              <motion.div className="row row-cols-1 row-cols-md-3 g-4" variants={staggerChildren}>
                 {products.map(product => (
-                  <div key={product.id} className="col">
+                  <motion.div key={product.id} className="col" variants={scaleUp}>
                     <div className="card h-100 shadow-sm border-0">
                       <img
                         src={product.image}
@@ -126,43 +147,63 @@ const Marketplace = () => {
                         <h5 className="card-title fw-semibold text-dark">{product.title}</h5>
                         <p className="card-text text-muted">KES {product.price}</p>
                         <p className="card-text text-muted">{product.seller}, {product.location}</p>
-                        <button
+                        <motion.button
                           className="btn btn-success w-100 shadow-sm"
                           onClick={() => addToCart(product)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           Add to Cart
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         ) : (
-          <div className="card shadow-sm border-0">
+          <motion.div
+            className="card shadow-sm border-0"
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+          >
             <div className="card-body">
-              <h2 className="fw-semibold text-dark mb-4">Your Cart</h2>
+              <motion.h2 className="fw-semibold text-dark mb-4" variants={fadeInUp}>
+                Your Cart
+              </motion.h2>
               {cart.length === 0 ? (
-                <p className="text-muted">
-                    Your cart is empty.
-                    <br />
-                    <br />
-                    <br />
-                <button
-                        className="btn btn-outline-success shadow-sm"
-                        onClick={() => setShowCart(false)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-                        </svg> 
-                        Marketplace
-                      </button>
-                </p>
-                
+                <motion.p className="text-muted" variants={fadeInUp}>
+                  Your cart is empty.
+                  <br />
+                  <br />
+                  <br />
+                  <motion.button
+                    className="btn btn-outline-success shadow-sm"
+                    onClick={() => setShowCart(false)}
+                    variants={scaleUp}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      className="bi bi-arrow-left"
+                      viewBox="0 0 16 16"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
+                      />
+                    </svg>
+                    Marketplace
+                  </motion.button>
+                </motion.p>
               ) : (
-                <>
-                  <table className="table table-hover">
+                <motion.div variants={staggerChildren}>
+                  <motion.table className="table table-hover" variants={staggerChildren}>
                     <thead>
                       <tr>
                         <th>Product</th>
@@ -174,7 +215,7 @@ const Marketplace = () => {
                     </thead>
                     <tbody>
                       {cart.map(item => (
-                        <tr key={item.id}>
+                        <motion.tr key={item.id} variants={fadeInUp}>
                           <td>{item.title}</td>
                           <td>KES {item.price}</td>
                           <td>
@@ -196,43 +237,73 @@ const Marketplace = () => {
                           </td>
                           <td>KES {item.price * item.quantity}</td>
                           <td>
-                            <button
+                            <motion.button
                               className="btn btn-outline-danger btn-sm"
                               onClick={() => removeFromCart(item.id)}
+                              whileHover={{ scale: 1.05 }}
                             >
                               Remove
-                            </button>
+                            </motion.button>
                           </td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
-                  </table>
-                  <div className="d-flex justify-content-between align-items-center mt-4">
-                    <h4 className="fw-semibold">Total: KES {totalAmount}</h4>
-                    <div className="d-flex gap-2">
-                      <button
+                  </motion.table>
+                  <motion.div
+                    className="d-flex justify-content-between align-items-center mt-4"
+                    variants={staggerChildren}
+                  >
+                    <motion.h4 className="fw-semibold" variants={fadeInUp}>
+                      Total: KES {totalAmount}
+                    </motion.h4>
+                    <motion.div className="d-flex gap-2" variants={staggerChildren}>
+                      <motion.button
                         className="btn btn-outline-success shadow-sm"
                         onClick={() => setShowCart(false)}
+                        variants={scaleUp}
+                        whileHover={{ scale: 1.05 }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-                        </svg> 
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          className="bi bi-arrow-left"
+                          viewBox="0 0 16 16"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
+                          />
+                        </svg>
                         Marketplace
-                      </button>
-                      <Link to="/checkout" className="btn btn-success shadow-sm">
-                      Checkout
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
-                        </svg> 
-                      </Link>
-                    </div>
-                  </div>
-                </>
+                      </motion.button>
+                      <motion.div variants={scaleUp}>
+                        <Link to="/checkout" className="btn btn-success shadow-sm">
+                          Checkout
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            className="bi bi-arrow-right"
+                            viewBox="0 0 16 16"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"
+                            />
+                          </svg>
+                        </Link>
+                      </motion.div>
+                    </motion.div>
+                  </motion.div>
+                </motion.div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
       <Footer />
     </div>

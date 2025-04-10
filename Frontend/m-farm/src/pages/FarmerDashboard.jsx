@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale } from 'chart.js';
 
@@ -16,7 +16,7 @@ const FarmerDashboard = () => {
   const [revenue, setRevenue] = useState({ day: 0, week: 0, month: 0, year: 0 });
   const navigate = useNavigate();
 
-  // Mock chart data (replace with API data)
+  // Mock chart data
   const chartData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
@@ -35,20 +35,39 @@ const FarmerDashboard = () => {
     plugins: { legend: { position: 'top' }, title: { display: true, text: 'Sales Analytics' } },
   };
 
+  // Animation variants
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+  };
+
+  const staggerChildren = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const scaleUp = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: { scale: 1, opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+  };
+
   // Check if user is logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/dashboard'); // Redirect to login if not authenticated
+      navigate('/dashboard'); // Fixed redirect to login
     } else {
-      // Fetch data from API (mocked for now)
       fetchDashboardData();
     }
   }, [navigate]);
 
   // Simulate API data fetching
   const fetchDashboardData = () => {
-    // Replace with real API calls
     setListings([
       { id: 1, name: 'Tomatoes', description: 'Fresh red tomatoes', price: 'KES 500', quantity: 10 },
       { id: 2, name: 'Maize', description: 'Yellow maize', price: 'KES 800', quantity: 20 },
@@ -60,7 +79,6 @@ const FarmerDashboard = () => {
     setRevenue({ day: 500, week: 2000, month: 8000, year: 50000 });
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -70,30 +88,13 @@ const FarmerDashboard = () => {
     setFormData({ ...formData, image: e.target.files[0] });
   };
 
-  // Handle form submission (POST to API)
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulate API call (replace with real POST request)
     console.log('New Listing:', formData);
-    // Example API call:
-    /*
-    const formDataToSend = new FormData();
-    Object.keys(formData).forEach(key => formDataToSend.append(key, formData[key]));
-    fetch('http://your-api-endpoint/api/listings/', {
-      method: 'POST',
-      body: formDataToSend,
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    })
-      .then(response => response.json())
-      .then(data => setListings([...listings, data]))
-      .catch(error => console.error('Error adding listing:', error));
-    */
-    setFormData({ name: '', description: '', price: '', quantity: '', image: null }); // Reset form
+    setFormData({ name: '', description: '', price: '', quantity: '', image: null });
   };
 
-  // Delete listing
   const handleDelete = (id) => {
-    // Simulate API call
     setListings(listings.filter(listing => listing.id !== id));
   };
 
@@ -102,57 +103,72 @@ const FarmerDashboard = () => {
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
 
       {/* Main Content */}
-      <div className="container py-5" style={{ maxWidth: '70%' }}>
+      <motion.div
+        className="container py-5"
+        style={{ maxWidth: '70%' }}
+        initial="hidden"
+        animate="visible"
+        variants={staggerChildren}
+      >
         {/* Overview Section - Revenue Cards */}
-        <h2 className="display-6 fw-semibold text-center mb-5 text-success">Farmer Dashboard</h2>
-        <div className="row row-cols-1 row-cols-md-4 g-4 mb-5">
-          <div className="col">
-            <div className="card shadow-sm border-0 text-center">
-              <div className="card-body">
-                <h5 className="card-title text-muted">Daily Revenue</h5>
-                <p className="card-text fw-bold text-success">KES {revenue.day}</p>
+        <motion.h2
+          className="display-6 fw-semibold text-center mb-5 text-success"
+          variants={fadeInUp}
+        >
+          Farmer Dashboard
+        </motion.h2>
+        <motion.div className="row row-cols-1 row-cols-md-4 g-4 mb-5" variants={staggerChildren}>
+          {[
+            { title: 'Daily Revenue', value: revenue.day },
+            { title: 'Weekly Revenue', value: revenue.week },
+            { title: 'Monthly Revenue', value: revenue.month },
+            { title: 'Yearly Revenue', value: revenue.year },
+          ].map((item, index) => (
+            <motion.div key={index} className="col" variants={scaleUp}>
+              <div className="card shadow-sm border-0 text-center">
+                <div className="card-body">
+                  <h5 className="card-title text-muted">{item.title}</h5>
+                  <p className="card-text fw-bold text-success">KES {item.value}</p>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="col">
-            <div className="card shadow-sm border-0 text-center">
-              <div className="card-body">
-                <h5 className="card-title text-muted">Weekly Revenue</h5>
-                <p className="card-text fw-bold text-success">KES {revenue.week}</p>
-              </div>
-            </div>
-          </div>
-          <div className="col">
-            <div className="card shadow-sm border-0 text-center">
-              <div className="card-body">
-                <h5 className="card-title text-muted">Monthly Revenue</h5>
-                <p className="card-text fw-bold text-success">KES {revenue.month}</p>
-              </div>
-            </div>
-          </div>
-          <div className="col">
-            <div className="card shadow-sm border-0 text-center">
-              <div className="card-body">
-                <h5 className="card-title text-muted">Yearly Revenue</h5>
-                <p className="card-text fw-bold text-success">KES {revenue.year}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          ))}
+        </motion.div>
 
         {/* Analytics Section */}
-        <div className="card shadow-sm border-0 mb-5">
+        <motion.div
+          className="card shadow-sm border-0 mb-5"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeInUp}
+        >
           <div className="card-body">
             <h3 className="fw-semibold text-dark mb-4">Sales Analytics</h3>
-            <Line data={chartData} options={chartOptions} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <Line data={chartData} options={chartOptions} />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Listings Table */}
-        <div className="card shadow-sm border-0 mb-5">
+        <motion.div
+          className="card shadow-sm border-0 mb-5"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={staggerChildren}
+        >
           <div className="card-body">
-            <h3 className="fw-semibold text-dark mb-4">Your Listings</h3>
-            <table className="table table-hover">
+            <motion.h3 className="fw-semibold text-dark mb-4" variants={fadeInUp}>
+              Your Listings
+            </motion.h3>
+            <motion.table className="table table-hover" variants={staggerChildren}>
               <thead>
                 <tr>
                   <th>Name</th>
@@ -164,7 +180,7 @@ const FarmerDashboard = () => {
               </thead>
               <tbody>
                 {listings.map(listing => (
-                  <tr key={listing.id}>
+                  <motion.tr key={listing.id} variants={fadeInUp}>
                     <td>{listing.name}</td>
                     <td>{listing.description}</td>
                     <td>{listing.price}</td>
@@ -178,19 +194,27 @@ const FarmerDashboard = () => {
                         Delete
                       </button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
-            </table>
+            </motion.table>
           </div>
-        </div>
+        </motion.div>
 
         {/* Add Listing Form */}
-        <div className="card shadow-sm border-0 mb-5">
+        <motion.div
+          className="card shadow-sm border-0 mb-5"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={staggerChildren}
+        >
           <div className="card-body">
-            <h3 className="fw-semibold text-dark mb-4">Add New Listing</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
+            <motion.h3 className="fw-semibold text-dark mb-4" variants={fadeInUp}>
+              Add New Product Listing
+            </motion.h3>
+            <motion.form onSubmit={handleSubmit} variants={staggerChildren}>
+              <motion.div className="mb-3" variants={fadeInUp}>
                 <input
                   type="text"
                   name="name"
@@ -200,8 +224,8 @@ const FarmerDashboard = () => {
                   onChange={handleInputChange}
                   required
                 />
-              </div>
-              <div className="mb-3">
+              </motion.div>
+              <motion.div className="mb-3" variants={fadeInUp}>
                 <textarea
                   name="description"
                   className="form-control"
@@ -211,10 +235,10 @@ const FarmerDashboard = () => {
                   rows="3"
                   required
                 />
-              </div>
-              <div className="row mb-3">
+              </motion.div>
+              <motion.div className="row mb-3" variants={staggerChildren}>
                 <div className="col">
-                  <input
+                  <motion.input
                     type="text"
                     name="price"
                     className="form-control"
@@ -222,10 +246,11 @@ const FarmerDashboard = () => {
                     value={formData.price}
                     onChange={handleInputChange}
                     required
+                    variants={fadeInUp}
                   />
                 </div>
                 <div className="col">
-                  <input
+                  <motion.input
                     type="number"
                     name="quantity"
                     className="form-control"
@@ -233,10 +258,11 @@ const FarmerDashboard = () => {
                     value={formData.quantity}
                     onChange={handleInputChange}
                     required
+                    variants={fadeInUp}
                   />
                 </div>
-              </div>
-              <div className="mb-3">
+              </motion.div>
+              <motion.div className="mb-3" variants={fadeInUp}>
                 <input
                   type="file"
                   name="image"
@@ -244,19 +270,32 @@ const FarmerDashboard = () => {
                   onChange={handleFileChange}
                   accept="image/*"
                 />
-              </div>
-              <button type="submit" className="btn btn-success w-100 shadow-sm">
-                Add Listing
-              </button>
-            </form>
+              </motion.div>
+              <motion.button
+                type="submit"
+                className="btn btn-success w-100 shadow-sm"
+                variants={scaleUp}
+                whileHover={{ scale: 1.05 }}
+              >
+                Add Product 
+              </motion.button>
+            </motion.form>
           </div>
-        </div>
+        </motion.div>
 
         {/* Orders Tab */}
-        <div className="card shadow-sm border-0">
+        <motion.div
+          className="card shadow-sm border-0"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={staggerChildren}
+        >
           <div className="card-body">
-            <h3 className="fw-semibold text-dark mb-4">Incoming Orders</h3>
-            <table className="table table-hover">
+            <motion.h3 className="fw-semibold text-dark mb-4" variants={fadeInUp}>
+              Incoming Orders
+            </motion.h3>
+            <motion.table className="table table-hover" variants={staggerChildren}>
               <thead>
                 <tr>
                   <th>Product</th>
@@ -267,20 +306,18 @@ const FarmerDashboard = () => {
               </thead>
               <tbody>
                 {orders.map(order => (
-                  <tr key={order.id}>
+                  <motion.tr key={order.id} variants={fadeInUp}>
                     <td>{order.product}</td>
                     <td>{order.buyer}</td>
                     <td>{order.quantity}</td>
                     <td>{order.status}</td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
-            </table>
+            </motion.table>
           </div>
-        </div>
-      </div>
-
-      <Footer />
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

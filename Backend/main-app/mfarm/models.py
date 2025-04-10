@@ -3,21 +3,21 @@ from accounts.models import CustomUser
 
 # Define categories as a tuple of (value, display_name) pairs
 FARM_CATEGORIES = (
-    ('CEREALS', 'Cereals'),  # e.g., maize, wheat, rice
-    ('LEGUMES', 'Legumes'),  # e.g., beans, peas, lentils
-    ('ROOTS_TUBERS', 'Roots and Tubers'),  # e.g., potatoes, yams, cassava
-    ('VEGETABLES', 'Vegetables'),  # e.g., tomatoes, spinach, carrots
-    ('FRUITS', 'Fruits'),  # e.g., mangoes, bananas, oranges
-    ('NUTS_SEEDS', 'Nuts and Seeds'),  # e.g., peanuts, almonds, sunflower seeds
-    ('LIVESTOCK', 'Livestock'),  # e.g., cattle, goats, chickens
-    ('LIVESTOCK_PRODUCTS', 'Livestock Products'),  # e.g., milk, eggs, wool
-    ('POULTRY', 'Poultry'),  # e.g., chickens, ducks, turkeys
-    ('FISH', 'Fish'),  # e.g., tilapia, catfish
-    ('HERBS_SPICES', 'Herbs and Spices'),  # e.g., basil, pepper, ginger
-    ('OIL_CROPS', 'Oil Crops'),  # e.g., sunflower, palm, soybeans
-    ('FIBER_CROPS', 'Fiber Crops'),  # e.g., cotton, sisal
-    ('FORESTRY_PRODUCTS', 'Forestry Products'),  # e.g., timber, bamboo
-    ('OTHER', 'Other'),  # Catch-all for miscellaneous products
+    ('CEREALS', 'Cereals'),  
+    ('LEGUMES', 'Legumes'),  
+    ('ROOTS_TUBERS', 'Roots and Tubers'),  
+    ('VEGETABLES', 'Vegetables'),  
+    ('FRUITS', 'Fruits'),  
+    ('NUTS_SEEDS', 'Nuts and Seeds'),  
+    ('LIVESTOCK', 'Livestock'),  
+    ('LIVESTOCK_PRODUCTS', 'Livestock Products'), 
+    ('POULTRY', 'Poultry'),  
+    ('FISH', 'Fish'),  
+    ('HERBS_SPICES', 'Herbs and Spices'),  
+    ('OIL_CROPS', 'Oil Crops'),  
+    ('FIBER_CROPS', 'Fiber Crops'),  
+    ('FORESTRY_PRODUCTS', 'Forestry Products'),  
+    ('OTHER', 'Other'),  
 )
 
 class Product(models.Model):
@@ -31,7 +31,7 @@ class Product(models.Model):
         choices=FARM_CATEGORIES,
         blank=True,
         null=True,
-        default='OTHER'  # Optional: sets a default category
+        default='OTHER'  
     )
 
     def __str__(self):

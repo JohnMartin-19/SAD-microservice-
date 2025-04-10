@@ -51,7 +51,6 @@ class LoginAPIView(APIView):
                 'message': 'Login successful!',
                 'token': token.key,
                 'user': UserSerializer(user).data,
-                'redirect_url': str(reverse_lazy('landing')),
             }, status=status.HTTP_200_OK)
         else:
             return Response({
@@ -71,7 +70,6 @@ class LogoutAPIView(APIView):
             return Response({
                 'status': 'success',
                 'message': 'Logged out successfully.',
-                'redirect_url': str(reverse_lazy('landing')),
             }, status=status.HTTP_200_OK)
         return Response({
             'status': 'error',

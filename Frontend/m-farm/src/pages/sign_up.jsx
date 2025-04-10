@@ -41,11 +41,22 @@ const Button = styled.button`
   &:hover {
     background-color: #1b5e20;
   }
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
 `;
 
 const ErrorMessage = styled.p`
   color: red;
   font-size: 0.9rem;
+  text-align: center;
+`;
+
+const SuccessMessage = styled.p`
+  color: #2e7d32;
+  font-size: 1rem;
+  text-align: center;
 `;
 
 const Signup = () => {
@@ -56,6 +67,8 @@ const Signup = () => {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -69,8 +82,13 @@ const Signup = () => {
       setError('Passwords do not match');
       return;
     }
+
+    setIsSubmitting(true); // Switch button to "Registering..."
+    setError(''); // Clear previous errors
+    setSuccess(''); // Clear previous success message
+
     try {
-      const response = await fetch('http://your-api-endpoint/api/signup/', {
+      const response = await fetch('http://localhost:8000/accounts/api/v1/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,12 +100,17 @@ const Signup = () => {
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem('token', data.token); // Store token
-        navigate('/dashboard'); // Redirect to dashboard
+        setSuccess('Your account has been created! Redirecting to login...');
+        setTimeout(() => {
+          navigate('/login'); // Redirect after 2 seconds
+        }, 2000); // 2000ms = 2 seconds
       } else {
         setError(data.message || 'Signup failed');
+        setIsSubmitting(false); // Reset button
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
+      setIsSubmitting(false); // Reset button
     }
   };
 
@@ -104,6 +127,7 @@ const Signup = () => {
             value={formData.username}
             onChange={handleChange}
             required
+            disabled={isSubmitting} // Disable inputs during submission
           />
           <Input
             type="email"
@@ -112,6 +136,7 @@ const Signup = () => {
             value={formData.email}
             onChange={handleChange}
             required
+            disabled={isSubmitting}
           />
           <Input
             type="password"
@@ -120,6 +145,7 @@ const Signup = () => {
             value={formData.password}
             onChange={handleChange}
             required
+            disabled={isSubmitting}
           />
           <Input
             type="password"
@@ -128,9 +154,13 @@ const Signup = () => {
             value={formData.confirmPassword}
             onChange={handleChange}
             required
+            disabled={isSubmitting}
           />
           {error && <ErrorMessage>{error}</ErrorMessage>}
-          <Button type="submit">Sign Up</Button>
+          {success && <SuccessMessage>{success}</SuccessMessage>}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Registering...' : 'Sign Up'}
+          </Button>
           <p>
             Already have an account? <Link to="/login">Login</Link>
           </p>

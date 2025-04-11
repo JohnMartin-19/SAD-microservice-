@@ -33,6 +33,12 @@ class Product(models.Model):
         null=True,
         default='OTHER'  
     )
+    image = models.ImageField(
+        upload_to='uploads/',  # Relative to MEDIA_ROOT
+        blank=True,
+        null=True,
+        default=None
+    )
 
     def __str__(self):
         return f"{self.name} ({self.category}) - {self.user.username}"

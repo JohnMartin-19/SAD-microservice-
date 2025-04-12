@@ -51,6 +51,12 @@ class Order(models.Model):
     date_ordered = models.DateTimeField(auto_now_add=True, blank=False)
     complete= models.BooleanField(blank=True, null=True)
     transaction_id = models.CharField(max_length=40,null=True, blank=True )
+    quantity = models.PositiveIntegerField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=[
+        ('Pending', 'Pending'),
+        ('Shipped', 'Shipped'),
+        ('Delivered', 'Delivered'),
+    ], default='Pending')
 
     def __str__(self):
         return self.transaction_id

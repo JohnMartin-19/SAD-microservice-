@@ -9,6 +9,7 @@ from .serializers import *
 from .models import *
 from django.views.decorators.csrf import csrf_exempt
 import json
+import os
 from django.http import JsonResponse
 import requests
 from django.utils import timezone
@@ -175,7 +176,7 @@ def ai_chat(request):
             response = requests.post(
                 'https://api.openai.com/v1/chat/completions',
                 headers={
-                    'Authorization': 'Bearer {apikey}',
+                    'Authorization': f'Bearer {os.getenv("OPENAI_API_KEY")}',
                     'Content-Type': 'application/json',
                 },
                 json={

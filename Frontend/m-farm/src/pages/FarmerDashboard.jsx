@@ -60,7 +60,7 @@ const FarmerDashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/dashboard'); // Fixed redirect to login
+      navigate('/login'); // Fixed redirect to login
     } else {
       fetchDashboardData();
     }

@@ -26,7 +26,7 @@ class Product(models.Model):
     description = models.CharField(blank=True, null=True, max_length=250)
     quantity = models.CharField(blank=True, null=True, max_length=50)
     product_location = models.CharField(blank=True, null=True, max_length=150)
-    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    price = models.CharField(max_length=100, null=True, blank=True)
     category = models.CharField(
         max_length=50,
         choices=FARM_CATEGORIES,

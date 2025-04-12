@@ -404,7 +404,7 @@ const Marketplace = () => {
         )}
       </motion.div>
 
-      <Footer />
+     
     </div>
   );
 };

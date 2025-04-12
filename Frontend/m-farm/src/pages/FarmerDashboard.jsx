@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale } from 'chart.js';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Register Chart.js components
 ChartJS.register(LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale);
@@ -14,21 +16,11 @@ const FarmerDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [formData, setFormData] = useState({ name: '', description: '', price: '', quantity: '', image: null });
   const [revenue, setRevenue] = useState({ day: 0, week: 0, month: 0, year: 0 });
+  const [chartData, setChartData] = useState({
+    labels: [],
+    datasets: [{ label: 'Sales (KES)', data: [], borderColor: '#2e7d32', backgroundColor: 'rgba(46, 125, 50, 0.2)', fill: true }],
+  });
   const navigate = useNavigate();
-
-  // Mock chart data
-  const chartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Sales (KES)',
-        data: [1200, 1900, 3000, 5000, 2300, 3400],
-        borderColor: '#2e7d32',
-        backgroundColor: 'rgba(46, 125, 50, 0.2)',
-        fill: true,
-      },
-    ],
-  };
 
   const chartOptions = {
     responsive: true,
@@ -60,23 +52,80 @@ const FarmerDashboard = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login'); // Fixed redirect to login
+      navigate('/login');
     } else {
-      fetchDashboardData();
+      fetchDashboardData(token);
     }
   }, [navigate]);
 
-  // Simulate API data fetching
-  const fetchDashboardData = () => {
-    setListings([
-      { id: 1, name: 'Tomatoes', description: 'Fresh red tomatoes', price: 'KES 500', quantity: 10 },
-      { id: 2, name: 'Maize', description: 'Yellow maize', price: 'KES 800', quantity: 20 },
-    ]);
-    setOrders([
-      { id: 1, product: 'Tomatoes', buyer: 'Jane', quantity: 5, status: 'Pending' },
-      { id: 2, product: 'Maize', buyer: 'Peter', quantity: 10, status: 'Shipped' },
-    ]);
-    setRevenue({ day: 500, week: 2000, month: 8000, year: 50000 });
+  // Fetch dynamic data
+  const fetchDashboardData = async (token) => {
+    try {
+      // Fetch products
+      const productResponse = await fetch('http://localhost:8000/mfarm/api/v1/myproducts/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!productResponse.ok) {
+        throw new Error('Failed to fetch products');
+      }
+      const products = await productResponse.json();
+      setListings(products);
+
+      // Fetch orders
+      const orderResponse = await fetch('http://localhost:8000/mfarm/api/v1/orders/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!orderResponse.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      const orders = await orderResponse.json();
+      setOrders(orders);
+
+      // Fetch revenue
+      const revenueResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!revenueResponse.ok) {
+        throw new Error('Failed to fetch revenue');
+      }
+      const revenueData = await revenueResponse.json();
+      setRevenue(revenueData);
+
+      // Fetch sales data for chart (assuming monthly breakdown)
+      const salesResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (salesResponse.ok) {
+        const salesData = await salesResponse.json();
+        setChartData({
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // Adjust based on API
+          datasets: [
+            {
+              label: 'Sales (KES)',
+              data: [salesData.day, salesData.week / 4, salesData.month / 12, salesData.month, salesData.year / 12, salesData.year / 6], // Mocked breakdown
+              borderColor: '#2e7d32',
+              backgroundColor: 'rgba(46, 125, 50, 0.2)',
+              fill: true,
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data. Please try again.');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -88,19 +137,69 @@ const FarmerDashboard = () => {
     setFormData({ ...formData, image: e.target.files[0] });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('New Listing:', formData);
-    setFormData({ name: '', description: '', price: '', quantity: '', image: null });
+    const token = localStorage.getItem('token');
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('price', formData.price);
+    formDataToSend.append('quantity', formData.quantity);
+    if (formData.image) {
+      formDataToSend.append('image', formData.image);
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+
+      if (response.ok) {
+        const newProduct = await response.json();
+        setListings([...listings, newProduct]);
+        setFormData({ name: '', description: '', price: '', quantity: '', image: null });
+        toast.success('Product added successfully!');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to add product.');
+      }
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error('Error adding product. Please try again.');
+    }
   };
 
-  const handleDelete = (id) => {
-    setListings(listings.filter(listing => listing.id !== id));
+  const handleDelete = async (id) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`http://localhost:8000/mfarm/api/v1/products/${id}/delete/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setListings(listings.filter(listing => listing.id !== id));
+        toast.success('Product deleted successfully!');
+      } else {
+        toast.error('Failed to delete product.');
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Error deleting product. Please try again.');
+    }
   };
 
   return (
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Main Content */}
       <motion.div
@@ -183,7 +282,7 @@ const FarmerDashboard = () => {
                   <motion.tr key={listing.id} variants={fadeInUp}>
                     <td>{listing.name}</td>
                     <td>{listing.description}</td>
-                    <td>{listing.price}</td>
+                    <td>KES {listing.price}</td>
                     <td>{listing.quantity}</td>
                     <td>
                       <button className="btn btn-outline-primary btn-sm me-2">Edit</button>
@@ -277,13 +376,13 @@ const FarmerDashboard = () => {
                 variants={scaleUp}
                 whileHover={{ scale: 1.05 }}
               >
-                Add Product 
+                Add Product
               </motion.button>
             </motion.form>
           </div>
         </motion.div>
 
-        {/* Orders Tab */}
+        {/* Orders Table */}
         <motion.div
           className="card shadow-sm border-0"
           initial="hidden"

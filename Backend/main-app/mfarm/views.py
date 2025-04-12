@@ -7,6 +7,15 @@ from rest_framework.authtoken.models import Token
 from django.urls import reverse_lazy
 from .serializers import *
 from .models import *
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.http import JsonResponse
+import requests
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Sum
+from rest_framework import status
+from django.core.files.storage import default_storage
 # Create your views here.
 
 #API ENDPOINTS FOR PRODUCT
@@ -33,7 +42,7 @@ class ProductListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ProductRetrieveUpdateDeleteView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Allow unauthenticated GET, authenticated PUT/DELETE
+    permission_classes = [IsAuthenticatedOrReadOnly]  # allow unauthenticated users GET, authenticated PUT/DELETE
 
     def get(self, request, pk):
         """
@@ -86,3 +95,100 @@ class ProductRetrieveUpdateDeleteView(APIView):
         
         product.delete()
         return Response({'message': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+class LoggedInUserProductListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        products = Product.objects.filter(user=request.user)
+        serializer = MyProductSerializer(products, many=True)
+        return Response(serializer.data)
+
+class OrderListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = Order.objects.filter(product__user=request.user)
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+
+class RevenueView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        now = timezone.now()
+        revenue = {
+            'day': 0,
+            'week': 0,
+            'month': 0,
+            'year': 0,
+        }
+
+        # Daily revenue
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_revenue = Order.objects.filter(
+            product__user=request.user,
+            created_at__gte=day_start,
+            status='Delivered'
+        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
+        revenue['day'] = float(day_revenue)
+
+        # Weekly revenue
+        week_start = now - timedelta(days=now.weekday())
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_revenue = Order.objects.filter(
+            product__user=request.user,
+            created_at__gte=week_start,
+            status='Delivered'
+        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
+        revenue['week'] = float(week_revenue)
+
+        # Monthly revenue
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_revenue = Order.objects.filter(
+            product__user=request.user,
+            created_at__gte=month_start,
+            status='Delivered'
+        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
+        revenue['month'] = float(month_revenue)
+
+        # Yearly revenue
+        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        year_revenue = Order.objects.filter(
+            product__user=request.user,
+            created_at__gte=year_start,
+            status='Delivered'
+        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
+        revenue['year'] = float(year_revenue)
+
+        serializer = RevenueSerializer(revenue)
+        return Response(serializer.data)
+
+########################### AI CHAT VIEW ############################
+@csrf_exempt
+def ai_chat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        prompt = data.get('prompt', '')
+        try:
+            # Example: Proxy to OpenAI (replace with xAI if available)
+            response = requests.post(
+                'https://api.openai.com/v1/chat/completions',
+                headers={
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'model': 'gpt-3.5-turbo',
+                    'messages': [
+                        {'role': 'system', 'content': 'You are an agricultural expert.'},
+                        {'role': 'user', 'content': prompt},
+                    ],
+                    'max_tokens': 150,
+                }
+            )
+            response.raise_for_status()
+            return JsonResponse(response.json())
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request'}, status=400)

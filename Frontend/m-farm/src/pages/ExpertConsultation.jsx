@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ExpertConsultation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,50 +12,81 @@ const ExpertConsultation = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [bookingDate, setBookingDate] = useState('');
-  const chatEndRef = useRef(null); // For auto-scrolling chat
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Mock expert data (replace with API data)
+  // Mock expert data (replace with API call later)
   const experts = [
     { id: 1, name: 'Dr. Kamau', specialty: 'Crop Disease Management', rate: 'KES 500' },
     { id: 2, name: 'Prof. Achieng', specialty: 'Soil Fertility', rate: 'KES 500' },
   ];
 
-  // Mock knowledge base for chatbot (simulating multiple AI agents)
-  const knowledgeBase = {
-    'crop disease': 'For crop diseases, ensure proper spacing and use organic fungicides. Expert Dr. Kamau suggests neem oil for fungal issues.',
-    'soil fertility': 'Test soil pH and add compost or fertilizers. Prof. Achieng recommends a 6.5 pH for optimal growth.',
-    'pests': 'Integrated Pest Management (IPM) is key. Use traps and beneficial insects. Aggregated from pest control agents.',
-    default: 'I’m combining insights from our expert AI agents. Please specify your question (e.g., crop disease, soil fertility, pests).',
+  // Check authentication status
+  const isAuthenticated = () => {
+    const token = localStorage.getItem('token');
+    return !!token; // Return true if token exists
+    // Optionally, verify token with backend:
+    /*
+    try {
+      const response = await fetch('http://localhost:8000/accounts/api/v1/verify-token/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+    */
   };
 
-  // Scroll to bottom of chat when new messages are added
+  // Scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
   const handleBookNow = (expert) => {
+    if (!isAuthenticated()) {
+      toast.error('Please log in to book a consultation.');
+      navigate('/login');
+      return;
+    }
     setSelectedExpert(expert);
     setModalVisible(true);
   };
 
-  const handleChatSubmit = (e) => {
+  const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
     // Add user message
     setChatMessages([...chatMessages, { text: chatInput, isUser: true }]);
+    setIsChatLoading(true);
 
-    // Simulate AI response from knowledge base
-    const lowerInput = chatInput.toLowerCase();
-    const response = knowledgeBase[
-      Object.keys(knowledgeBase).find(key => lowerInput.includes(key)) || 'default'
-    ];
+    try {
+      // Replace with your AI API endpoint (e.g., xAI Grok or Django proxy)
+      const response = await fetch('http://localhost:8000/mfarm/api/v1/ai-chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add Authorization if endpoint is protected
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ prompt: chatInput }),
+      });
+      const data = await response.json();
+      const aiResponse = data.choices?.[0]?.message?.content || data.error || 'Sorry, I couldn’t process that.';
 
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { text: response, isUser: false }]);
-    }, 1000); // Simulate delay
-
-    setChatInput('');
+      setChatMessages(prev => [...prev, { text: aiResponse, isUser: false }]);
+    } catch (error) {
+      console.error('AI API error:', error);
+      setChatMessages(prev => [
+        ...prev,
+        { text: 'Error connecting to AI assistant. Please try again.', isUser: false },
+      ]);
+    } finally {
+      setIsChatLoading(false);
+      setChatInput('');
+    }
   };
 
   const handlePayment = () => {
@@ -64,6 +98,7 @@ const ExpertConsultation = () => {
   return (
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Main Content */}
       <div className="container py-5" style={{ maxWidth: '70%' }}>
@@ -90,7 +125,9 @@ const ExpertConsultation = () => {
             </div>
           ))}
         </div>
-
+          <br />
+          <br />
+          <br />
         {/* Chatbot Interface */}
         <h2 className="display-6 fw-semibold text-center mb-5 text-success">
           Ask Our AI Expert Assistant
@@ -114,6 +151,13 @@ const ExpertConsultation = () => {
                   </div>
                 </div>
               ))}
+              {isChatLoading && (
+                <div className="d-flex justify-content-start mb-2">
+                  <div className="p-2 rounded bg-light text-dark" style={{ maxWidth: '70%' }}>
+                    Consolidating your response...
+                  </div>
+                </div>
+              )}
               <div ref={chatEndRef} />
             </div>
             <form onSubmit={handleChatSubmit} className="d-flex gap-2">
@@ -123,12 +167,22 @@ const ExpertConsultation = () => {
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 placeholder="Ask about crops, soil, pests, etc."
+                disabled={isChatLoading}
               />
-              <button type="submit" className="btn btn-success shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+              <button type="submit" className="btn btn-success shadow-sm" disabled={isChatLoading}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  className="bi bi-arrow-up"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"
+                  />
                 </svg>
-                
               </button>
             </form>
           </div>
@@ -172,7 +226,6 @@ const ExpertConsultation = () => {
         </div>
       )}
 
-      
     </div>
   );
 };

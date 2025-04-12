@@ -4,24 +4,26 @@ import styled from 'styled-components';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+// Center the form vertically and horizontally
 const FormWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* Center vertically */
+  min-height: 70vh; /* Full viewport height */
   padding: 2rem;
-  min-height: 80vh;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 400px;
-  gap: 1rem;
+  max-width: 500px; /* Increased width */
+  gap: 1.5rem; /* Slightly larger gap for better spacing */
   background: #fff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem; /* Slightly more padding */
+  border-radius: 10px; /* Slightly larger radius for aesthetics */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Enhanced shadow for depth */
 `;
 
 const Input = styled.input`
@@ -62,8 +64,8 @@ const SuccessMessage = styled.p`
 const Login = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(''); // Fixed useState syntax
-  const [isSubmitting, setIsSubmitting] = useState(false); // Added for button state
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -73,9 +75,9 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true); // Switch button to "Logging in..."
-    setError(''); // Clear previous errors
-    setSuccess(''); // Clear previous success
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
 
     try {
       const response = await fetch('http://localhost:8000/accounts/api/v1/login/', {
@@ -85,19 +87,19 @@ const Login = () => {
       });
       const data = await response.json();
       if (response.status === 200) {
-        localStorage.setItem('token', data.token); // Store token
+        localStorage.setItem('token', data.token);
         setSuccess('You have been logged in! Redirecting to dashboard...');
         setTimeout(() => {
-          navigate('/dashboard'); // Redirect after 2 seconds
-          setIsSubmitting(false); // Reset button after redirect
+          navigate('/dashboard');
+          setIsSubmitting(false);
         }, 2000);
       } else {
         setError(data.message || 'Login failed');
-        setIsSubmitting(false); // Reset button on error
+        setIsSubmitting(false);
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
-      setIsSubmitting(false); // Reset button on exception
+      setIsSubmitting(false);
     }
   };
 
@@ -114,7 +116,7 @@ const Login = () => {
             value={formData.username}
             onChange={handleChange}
             required
-            disabled={isSubmitting} // Disable during submission
+            disabled={isSubmitting}
           />
           <Input
             type="password"
@@ -135,7 +137,7 @@ const Login = () => {
           </p>
         </Form>
       </FormWrapper>
-      <Footer />
+      
     </>
   );
 };

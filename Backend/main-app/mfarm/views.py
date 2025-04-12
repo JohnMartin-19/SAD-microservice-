@@ -175,7 +175,7 @@ def ai_chat(request):
             response = requests.post(
                 'https://api.openai.com/v1/chat/completions',
                 headers={
-                    'Authorization': 'Bearer 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',
+                    'Authorization': 'Bearer {apikey}',
                     'Content-Type': 'application/json',
                 },
                 json={

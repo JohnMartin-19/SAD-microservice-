@@ -14,7 +14,14 @@ const FarmerDashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [listings, setListings] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [formData, setFormData] = useState({ name: '', description: '', price: '', quantity: '', image: null });
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    quantity: '',
+    product_location: '', // Added product_location
+    image: null,
+  });
   const [revenue, setRevenue] = useState({ day: 0, week: 0, month: 0, year: 0 });
   const [chartData, setChartData] = useState({
     labels: [],
@@ -61,8 +68,6 @@ const FarmerDashboard = () => {
   // Fetch dynamic data
   const fetchDashboardData = async (token) => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('Token to be sent to API',token)
       // Fetch products
       const productResponse = await fetch('http://localhost:8000/mfarm/api/v1/myproducts/', {
         headers: {
@@ -102,7 +107,7 @@ const FarmerDashboard = () => {
       const revenueData = await revenueResponse.json();
       setRevenue(revenueData);
 
-      // Fetch sales data for chart (assuming monthly breakdown)
+      // Fetch sales data for chart
       const salesResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,11 +117,11 @@ const FarmerDashboard = () => {
       if (salesResponse.ok) {
         const salesData = await salesResponse.json();
         setChartData({
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // Adjust based on API
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
           datasets: [
             {
               label: 'Sales (KES)',
-              data: [salesData.day, salesData.week / 4, salesData.month / 12, salesData.month, salesData.year / 12, salesData.year / 6], // Mocked breakdown
+              data: [salesData.day, salesData.week / 4, salesData.month / 12, salesData.month, salesData.year / 12, salesData.year / 6],
               borderColor: '#2e7d32',
               backgroundColor: 'rgba(46, 125, 50, 0.2)',
               fill: true,
@@ -147,12 +152,13 @@ const FarmerDashboard = () => {
     formDataToSend.append('description', formData.description);
     formDataToSend.append('price', formData.price);
     formDataToSend.append('quantity', formData.quantity);
+    formDataToSend.append('product_location', formData.product_location); // Added product_location
     if (formData.image) {
       formDataToSend.append('image', formData.image);
     }
 
     try {
-      const response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
+      const response = await fetch('http://localhost:8000/mfarm/api/v1/products/', { // Updated to /products/
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -163,7 +169,7 @@ const FarmerDashboard = () => {
       if (response.ok) {
         const newProduct = await response.json();
         setListings([...listings, newProduct]);
-        setFormData({ name: '', description: '', price: '', quantity: '', image: null });
+        setFormData({ name: '', description: '', price: '', quantity: '', product_location: '', image: null });
         toast.success('Product added successfully!');
       } else {
         const errorData = await response.json();
@@ -178,7 +184,7 @@ const FarmerDashboard = () => {
   const handleDelete = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`http://localhost:8000/mfarm/api/v1/products/${id}/delete/`, {
+      const response = await fetch(`http://localhost:8000/mfarm/api/v1/myproducts/${id}/delete/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -362,6 +368,16 @@ const FarmerDashboard = () => {
                     variants={fadeInUp}
                   />
                 </div>
+              </motion.div>
+              <motion.div className="mb-3" variants={fadeInUp}>
+                <input
+                  type="text"
+                  name="product_location"
+                  className="form-control"
+                  placeholder="Product Location (e.g., Nairobi)"
+                  value={formData.product_location}
+                  onChange={handleInputChange}
+                />
               </motion.div>
               <motion.div className="mb-3" variants={fadeInUp}>
                 <input

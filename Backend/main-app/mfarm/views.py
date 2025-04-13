@@ -109,7 +109,7 @@ class OrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        orders = Order.objects.filter(product__user=request.user)
+        orders = Order.objects.filter(productorder__product__user=request.user)
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
 
@@ -117,53 +117,48 @@ class RevenueView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        now = timezone.now()
-        revenue = {
-            'day': 0,
-            'week': 0,
-            'month': 0,
-            'year': 0,
-        }
+        try:
+            today = timezone.now().date()
+            week_ago = today - timedelta(days=7)
+            month_ago = today - timedelta(days=30)
 
-        # Daily revenue
-        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        day_revenue = Order.objects.filter(
-            product__user=request.user,
-            created_at__gte=day_start,
-            status='Delivered'
-        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
-        revenue['day'] = float(day_revenue)
+            # Calculate revenue: sum of (ProductOrder.quantity * Product.price)
+            base_query = (
+                Order.objects.filter(
+                    productorder__product__user=request.user,
+                    complete=True
+                )
+                .annotate(
+                    total=Sum(
+                        F('productorder__quantity') * F('productorder__product__price')
+                    )
+                )
+            )
 
-        # Weekly revenue
-        week_start = now - timedelta(days=now.weekday())
-        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
-        week_revenue = Order.objects.filter(
-            product__user=request.user,
-            created_at__gte=week_start,
-            status='Delivered'
-        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
-        revenue['week'] = float(week_revenue)
+            # Daily revenue
+            day_revenue = base_query.filter(
+                date_ordered__date=today
+            ).aggregate(total_revenue=Sum('total'))['total_revenue'] or 0
 
-        # Monthly revenue
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_revenue = Order.objects.filter(
-            product__user=request.user,
-            created_at__gte=month_start,
-            status='Delivered'
-        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
-        revenue['month'] = float(month_revenue)
+            # Weekly revenue
+            week_revenue = base_query.filter(
+                date_ordered__date__gte=week_ago
+            ).aggregate(total_revenue=Sum('total'))['total_revenue'] or 0
 
-        # Yearly revenue
-        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        year_revenue = Order.objects.filter(
-            product__user=request.user,
-            created_at__gte=year_start,
-            status='Delivered'
-        ).aggregate(total=Sum('product__price' * 'quantity'))['total'] or 0
-        revenue['year'] = float(year_revenue)
+            # Monthly revenue
+            month_revenue = base_query.filter(
+                date_ordered__date__gte=month_ago
+            ).aggregate(total_revenue=Sum('total'))['total_revenue'] or 0
 
-        serializer = RevenueSerializer(revenue)
-        return Response(serializer.data)
+            data = [
+                {'period': 'today', 'revenue': float(day_revenue)},
+                {'period': 'this_week', 'revenue': float(week_revenue)},
+                {'period': 'this_month', 'revenue': float(month_revenue)},
+            ]
+            serializer = RevenueSerializer(data, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 ########################### AI CHAT VIEW ############################
 @csrf_exempt

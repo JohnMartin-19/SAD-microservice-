@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// Center the form vertically and horizontally
 const FormWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Center vertically */
-  min-height: 70vh; /* Full viewport height */
+  justify-content: center;
+  min-height: 70vh;
   padding: 2rem;
 `;
 
@@ -18,12 +18,12 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 500px; /* Increased width */
-  gap: 1.5rem; /* Slightly larger gap for better spacing */
+  max-width: 500px;
+  gap: 1.5rem;
   background: #fff;
-  padding: 2.5rem; /* Slightly more padding */
-  border-radius: 10px; /* Slightly larger radius for aesthetics */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Enhanced shadow for depth */
+  padding: 2.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 `;
 
 const Input = styled.input`
@@ -100,17 +100,26 @@ const Signup = () => {
         }),
       });
       const data = await response.json();
+      console.log('Signup response:', data); // Debug
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        setSuccess('Your account has been created! Redirecting to login...');
+        localStorage.setItem('token', data.tokens.access);
+        localStorage.setItem('refresh_token', data.tokens.refresh);
+        console.log('Stored tokens:', data.tokens); // Debug
+        setSuccess('Account created! Redirecting to dashboard...');
         setTimeout(() => {
-          navigate('/login');
+          navigate('/dashboard');
         }, 2000);
       } else {
-        setError(data.message || 'Signup failed');
+        console.error('Signup error:', data);
+        setError(
+          data.error ||
+            Object.values(data).join(', ') ||
+            'Signup failed'
+        );
         setIsSubmitting(false);
       }
     } catch (err) {
+      console.error('Signup catch:', err);
       setError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
@@ -119,6 +128,7 @@ const Signup = () => {
   return (
     <>
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+      <ToastContainer position="top-right" autoClose={3000} />
       <FormWrapper>
         <h2>Sign Up for M-Farm</h2>
         <Form onSubmit={handleSubmit}>
@@ -137,7 +147,6 @@ const Signup = () => {
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
-            required
             disabled={isSubmitting}
           />
           <Input
@@ -168,7 +177,6 @@ const Signup = () => {
           </p>
         </Form>
       </FormWrapper>
-      
     </>
   );
 };

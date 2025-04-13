@@ -11,3 +11,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model=CustomUser
         fields = ('username','email','password',)
+
+
+    def create(self, validated_data):
+        user = CustomUser(
+            username=validated_data['username'],
+            email=validated_data.get('email', '')
+        )
+        user.set_password(validated_data['password'])
+        user.is_active = True
+        user.save()
+        return user

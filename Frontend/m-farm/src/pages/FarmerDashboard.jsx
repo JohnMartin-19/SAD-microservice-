@@ -61,6 +61,8 @@ const FarmerDashboard = () => {
   // Fetch dynamic data
   const fetchDashboardData = async (token) => {
     try {
+      const token = localStorage.getItem('token');
+      console.log('Token to be sent to API',token)
       // Fetch products
       const productResponse = await fetch('http://localhost:8000/mfarm/api/v1/myproducts/', {
         headers: {

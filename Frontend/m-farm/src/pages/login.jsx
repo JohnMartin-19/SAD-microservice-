@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
-
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 // Center the form vertically and horizontally
 const FormWrapper = styled.div`
   display: flex;
@@ -87,8 +87,9 @@ const Login = () => {
       });
       const data = await response.json();
       if (response.status === 200) {
-        localStorage.setItem('token', data.token);
-        setSuccess('You have been logged in! Redirecting to dashboard...');
+        localStorage.setItem('token', data.access);
+        localStorage.setItem('refresh_token',data.refresh)
+        toast.success('Logged in successfully!');
         setTimeout(() => {
           navigate('/dashboard');
           setIsSubmitting(false);
@@ -106,6 +107,7 @@ const Login = () => {
   return (
     <>
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+      <ToastContainer position="top-right" autoClose={3000} />
       <FormWrapper>
         <h2>Login to M-Farm</h2>
         <Form onSubmit={handleSubmit}>

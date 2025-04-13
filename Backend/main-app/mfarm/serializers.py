@@ -27,11 +27,11 @@ class MyProductSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     product = serializers.CharField(source='product.name')
-    buyer = serializers.CharField(source='palced_by.username')
+    buyer = serializers.CharField(source='placed_by.username')
 
     class Meta:
         model = Order
-        fields = ['id', 'product', 'placed_by', 'quantity', 'status']
+        fields = ['id', 'transaction_id', 'placed_by', 'quantity', 'status']
 
 class RevenueSerializer(serializers.Serializer):
     day = serializers.DecimalField(max_digits=10, decimal_places=2)

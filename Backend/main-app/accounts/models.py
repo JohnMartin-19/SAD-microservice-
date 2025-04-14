@@ -6,6 +6,7 @@ class CustomUser(AbstractUser):
     phone = models.CharField(null=True, blank=True, max_length=25)
     bio = models.CharField(null =True, blank=True, max_length=500)
     location = models.CharField(null=True, blank=True, max_length=30)
+    photo = models.ImageField(null=True, blank=True,upload_to='users/')
 
     def __str__(self):
         return self.username

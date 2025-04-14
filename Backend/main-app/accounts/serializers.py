@@ -22,3 +22,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.is_active = True
         user.save()
         return user
+    
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'first_name', 'phone', 'bio', 'location', 'photo']
+        read_only_fields = ['id', 'username']  # block changing username

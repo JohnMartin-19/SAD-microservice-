@@ -65,7 +65,7 @@ class Order(models.Model):
 class ProductOrder(models.Model):
     product = models.ForeignKey(Product, on_delete = models.PROTECT)
     order = models.ForeignKey(Order, on_delete = models.PROTECT)
-    quantity = models.CharField(max_length=100, blank=True, null=True)
+    quantity = models.PositiveIntegerField(default=1,null=True, blank=True)
     date_added = models.DateField(auto_created=True, blank=True)
 
 

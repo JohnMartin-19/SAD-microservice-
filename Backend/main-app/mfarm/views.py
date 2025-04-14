@@ -97,6 +97,7 @@ class ProductRetrieveUpdateDeleteView(APIView):
         product.delete()
         return Response({'message': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
+#logged in user API(product related)
 class LoggedInUserProductListView(APIView):
     permission_classes = [IsAuthenticated]
 

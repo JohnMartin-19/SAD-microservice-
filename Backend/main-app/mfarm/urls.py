@@ -10,4 +10,6 @@ urlpatterns = [
     path('api/v1/orders/', OrderListView.as_view(), name='order_list'),
     path('api/v1/revenue/', RevenueView.as_view(), name='revenue'),
     path('api/v1/ai-chat/', ai_chat, name='ai_chat'),
+    path('api/v1/cart/', CartView.as_view(), name='cart'),
+    path('api/v1/checkout/', CheckoutView.as_view(), name='checkout'),
 ]

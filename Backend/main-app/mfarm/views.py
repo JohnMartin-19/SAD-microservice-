@@ -17,6 +17,7 @@ from datetime import timedelta
 from django.db.models import Sum
 from rest_framework import status
 from django.core.files.storage import default_storage
+import uuid
 # Create your views here.
 
 #API ENDPOINTS FOR PRODUCT
@@ -189,3 +190,88 @@ def ai_chat(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+###########  ORDER SERVICE API  ##############
+class CartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = CartItemSerializer(data=request.data)
+        if serializer.is_valid():
+            product_id = serializer.validated_data['product_id']
+            quantity = serializer.validated_data['quantity']
+            try:
+                product = Product.objects.get(id=product_id)
+                if product.quantity < quantity:
+                    return Response(
+                        {'error': f'Only {product.quantity} items available'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                # Cart is managed frontend-side; return success
+                return Response({'product_id': product_id, 'quantity': quantity})
+            except Product.DoesNotExist:
+                return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CheckoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        cart_items = request.data.get('cart', [])
+        payment_method = request.data.get('payment_method', 'M-Pesa')
+        if not cart_items:
+            return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Create Order
+            order = Order.objects.create(
+                placed_by=request.user,
+                complete=False,
+                transaction_id=str(uuid.uuid4()),
+                status='Pending',
+                quantity=sum(item['quantity'] for item in cart_items)
+            )
+
+            # Create ProductOrders
+            for item in cart_items:
+                serializer = CartItemSerializer(data=item)
+                if serializer.is_valid():
+                    product_id = serializer.validated_data['product_id']
+                    quantity = serializer.validated_data['quantity']
+                    product = Product.objects.get(id=product_id)
+                    if product.quantity < quantity:
+                        order.delete()
+                        return Response(
+                            {'error': f'Only {product.quantity} of {product.name} available'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    ProductOrder.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=quantity,
+                        date_added=timezone.now()
+                    )
+                    # Update product quantity
+                    product.quantity -= quantity
+                    product.save()
+                else:
+                    order.delete()
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create Transaction
+            transaction = Transaction.objects.create(
+                user_id=request.user,
+                order_id=order,
+                payment_method=payment_method
+            )
+
+            serializer = OrderSerializer(order)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Product.DoesNotExist:
+            order.delete()
+            return Response({'error': 'One or more products not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            order.delete()
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

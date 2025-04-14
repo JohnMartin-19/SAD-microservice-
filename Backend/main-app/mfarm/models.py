@@ -57,9 +57,17 @@ class Order(models.Model):
         ('Shipped', 'Shipped'),
         ('Delivered', 'Delivered'),
     ], default='Pending')
+    # Added for user details and shipping
+    name = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+
 
     def __str__(self):
-        return self.transaction_id
+        return self.transaction_id or f"Order {self.id}"
     
 
 class ProductOrder(models.Model):
@@ -83,10 +91,3 @@ class Transaction(models.Model):
         return f"{self.user_id.username} ({self.timestamp}) - {self.payment_method}"
     
 
-class Shipping(models.Model):
-    address = models.CharField(max_length=100, null=True, blank=True)
-    city = models.CharField(max_length = 100, blank=True, null=True)
-    postal_code = models.CharField(max_length=100, null=True, blank=True)
-
-    def __str__(self):
-        return self.city

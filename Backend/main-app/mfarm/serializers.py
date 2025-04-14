@@ -45,10 +45,11 @@ class ProductOrderSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), source='product', write_only=True
     )
+    product_name = serializers.CharField(source='product.name', read_only=True)
 
     class Meta:
         model = ProductOrder
-        fields = ['product', 'product_id', 'quantity']
+        fields = ['product', 'product_id', 'quantity','product_name']
 
 class OrderSerializer(serializers.ModelSerializer):
     productorder = ProductOrderSerializer(many=True, read_only=True)

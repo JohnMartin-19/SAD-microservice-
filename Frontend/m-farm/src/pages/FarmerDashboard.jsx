@@ -424,8 +424,10 @@ const FarmerDashboard = () => {
               <tbody>
                 {orders.map(order => (
                   <motion.tr key={order.id} variants={fadeInUp}>
-                    <td>{order.product}</td>
-                    <td>{order.buyer}</td>
+                    <td>{order.productorder > 0
+                      ? order.productorder.map(item => item.product_name || item.product.name).join(', ')
+                      : 'No products'}</td>
+                    <td>{order.placed_by.username}</td>
                     <td>{order.quantity}</td>
                     <td>{order.status}</td>
                   </motion.tr>

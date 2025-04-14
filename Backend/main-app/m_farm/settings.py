@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'rest_framework_simplejwt',
+    'drf_spectacular',
     #local apps
     "mfarm.apps.MfarmConfig",
     "accounts.apps.AccountsConfig",
@@ -77,15 +78,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'm_farm.wsgi.application'
 
+#swagger API docs
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'M-Farm API Docs',
+    'DESCRIPTION': 'API for M-FARM agricultural marketplace',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 #DRF SETTINGS
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  # Allow unauthenticated access to registration/login
     ],
+    
 }
 
 SIMPLE_JWT = {

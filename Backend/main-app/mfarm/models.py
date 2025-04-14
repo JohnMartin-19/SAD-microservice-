@@ -24,7 +24,7 @@ class Product(models.Model):
     name = models.CharField(blank=False, max_length=100, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     description = models.CharField(blank=True, null=True, max_length=250)
-    quantity = models.CharField(blank=True, null=True, max_length=50)
+    quantity = models.PositiveIntegerField(null=True,blank=True)
     product_location = models.CharField(blank=True, null=True, max_length=150)
     price = models.PositiveIntegerField(null=True, blank=True)
     category = models.CharField(

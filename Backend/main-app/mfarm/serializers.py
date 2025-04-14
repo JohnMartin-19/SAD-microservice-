@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from accounts.models import CustomUser
-
+from datetime import datetime
 #pupose for the user serializer is to return a nested response.
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,11 +52,29 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     productorder = ProductOrderSerializer(many=True, read_only=True)
-    placed_by = serializers.StringRelatedField()
+    placed_by = UserSerializer(read_only=True)
+    placed_by_id = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(), source='placed_by', write_only=True
+    )
+    cart = ProductOrderSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'placed_by', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status', 'productorder']
+        fields = [
+            'id', 'placed_by', 'placed_by_id', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
+            'name', 'email', 'phone', 'address', 'city', 'postal_code', 'productorder', 'cart'
+        ]
+    def create(self, validated_data):
+        cart = validated_data.pop('cart')
+        order = Order.objects.create(**validated_data)
+        for item in cart:
+            ProductOrder.objects.create(
+                order=order,
+                product=item['product'],
+                quantity=item['quantity'],
+                date_added = datetime.now()
+            )
+        return order
 
 class TransactionSerializer(serializers.ModelSerializer):
     user_id = serializers.StringRelatedField()

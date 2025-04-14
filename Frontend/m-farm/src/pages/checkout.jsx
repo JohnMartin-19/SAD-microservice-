@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-// import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Checkout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [policyAccepted, setPolicyAccepted] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Get cart and total from Marketplace via state
   const { cart = [], totalAmount = 0 } = location.state || {};
@@ -25,7 +27,12 @@ const Checkout = () => {
         setTotalAmount(parsedCart.reduce((sum, item) => sum + item.price * item.quantity, 0));
       }
     }
-  }, []);
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const [cartState, setCart] = useState(cart);
   const [totalAmountState, setTotalAmount] = useState(totalAmount);
@@ -35,75 +42,71 @@ const Checkout = () => {
     setState(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePayment = async () => {
+  const handleCheckout = async () => {
     if (!policyAccepted) {
-      alert('Please accept the company policy to proceed.');
+      toast.error('Please accept the company policy to proceed.');
       return;
     }
     if (!paymentMethod) {
-      alert('Please select a payment method.');
+      toast.error('Please select a payment method.');
       return;
     }
     if (!userDetails.name || !userDetails.email || !userDetails.phone || !shippingAddress.address) {
-      alert('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       return;
     }
 
-    // Simulate payment processing based on selected method
-    switch (paymentMethod) {
-      case 'mpesa':
-        const response = await fetch('http://your-api-endpoint/mpesa/c2b', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-            amount: totalAmountState,
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('http://localhost:8000/mfarm/api/v1/checkout/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cart: cartState.map(item => ({
+            product_id: item.id,
+            quantity: item.quantity,
+            price:item.price
+          })),
+          payment_method: paymentMethod,
+          user_details: {
+            name: userDetails.name,
+            email: userDetails.email,
             phone: userDetails.phone,
-            }),
-        });
-        const data = await response.json();
-        // M-Pesa Daraja API C2B (placeholder)
-        console.log('Processing M-Pesa payment...', { amount: totalAmountState, phone: userDetails.phone });
-        // Example: await fetch('http://your-api-endpoint/mpesa/c2b', { ... });
-        alert('M-Pesa payment initiated. Check your phone to complete.');
-        alert(data.message); // e.g., "Enter PIN on your phone"
-        break;
-        
-      case 'paypal':
-        
-        // PayPal (requires SDK integration)
-        console.log('Processing PayPal payment...', { amount: totalAmountState });
-        alert('PayPal payment would open here.');
-        break;
-      case 'visa':
-        console.log('Processing Visa payment...', { amount: totalAmountState });
-        alert('Visa payment would proceed here.');
-        break;
-      case 'venmo':
-        console.log('Processing Venmo payment...', { amount: totalAmountState });
-        alert('Venmo payment would proceed here.');
-        break;
-      case 'googlepay':
-        console.log('Processing Google Pay payment...', { amount: totalAmountState });
-        alert('Google Pay payment would proceed here.');
-        break;
-      case 'jambopay':
-        console.log('Processing Jambopay payment...', { amount: totalAmountState });
-        alert('Jambopay Wallet payment would proceed here.');
-        break;
-      case 'pesapal':
-        console.log('Processing Pesapal payment...', { amount: totalAmountState });
-        alert('Pesapal payment would proceed here.');
-        break;
-      default:
-        alert('Invalid payment method.');
+          },
+          shipping_address: {
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            postal_code: shippingAddress.postalCode,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const order = await response.json();
+        setCart([]);
+        setTotalAmount(0);
+        sessionStorage.removeItem('cart');
+        toast.success('Order placed successfully!');
+        setTimeout(()=>{
+          navigate('/marketplace');
+        },3000)
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to place order.');
+      }
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      toast.error('Error placing order. Please try again.');
     }
-    // Clear cart after successful payment (in real implementation)
-    // sessionStorage.removeItem('cart');
   };
 
   return (
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Main Content */}
       <div className="container py-5" style={{ maxWidth: '70%' }}>
@@ -273,7 +276,7 @@ const Checkout = () => {
               onChange={e => setPolicyAccepted(e.target.checked)}
             />
             <label htmlFor="policy" className="form-check-label">
-              I accept the <a href="/policy" className="text-success">company policy</a>.
+              I accept the <Link to="/policy" className="text-success">company policy</Link>.
             </label>
           </div>
         </div>
@@ -283,13 +286,13 @@ const Checkout = () => {
           <Link to="/marketplace" className="btn btn-outline-success shadow-sm">
             Back to Marketplace
           </Link>
-          <button className="btn btn-success shadow-sm" onClick={handlePayment}>
-            Complete Payment
+          <button className="btn btn-success shadow-sm" onClick={handleCheckout}>
+            Place Order
           </button>
         </div>
       </div>
 
-    
+     
     </div>
   );
 };

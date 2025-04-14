@@ -194,6 +194,7 @@ def ai_chat(request):
 
 
 ###########  ORDER SERVICE API  ##############
+
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -209,7 +210,6 @@ class CartView(APIView):
                         {'error': f'Only {product.quantity} items available'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                # Cart is managed frontend-side; return success
                 return Response({'product_id': product_id, 'quantity': quantity})
             except Product.DoesNotExist:
                 return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -219,59 +219,81 @@ class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        cart_items = request.data.get('cart', [])
-        payment_method = request.data.get('payment_method', 'M-Pesa')
-        if not cart_items:
-            return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            # Create Order
-            order = Order.objects.create(
-                placed_by=request.user,
-                complete=False,
-                transaction_id=str(uuid.uuid4()),
-                status='Pending',
-                quantity=sum(item['quantity'] for item in cart_items)
-            )
+            if not request.user.is_authenticated:
+                return Response(
+                    {'error': 'User not authenticated'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
 
-            # Create ProductOrders
-            for item in cart_items:
+            cart = request.data.get('cart', [])
+            print('cart data to be sent', cart)
+            payment_method = request.data.get('payment_method', '')
+            print('Payment', payment_method)
+            user_details = request.data.get('user_details', {})
+            print('Usr details', user_details)
+            shipping_address = request.data.get('shipping_address', {})
+            print('Shipping', shipping_address)
+
+            if not cart:
+                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate cart items
+            validated_cart = []
+            for item in cart:
                 serializer = CartItemSerializer(data=item)
-                if serializer.is_valid():
-                    product_id = serializer.validated_data['product_id']
-                    quantity = serializer.validated_data['quantity']
-                    product = Product.objects.get(id=product_id)
-                    if product.quantity < quantity:
+                if not serializer.is_valid():
+                    print('CartItemSerializer errors:', serializer.errors)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                validated_cart.append(serializer.validated_data)
+                print(f"Item quantity type: {type(item['quantity'])}, validated: {type(serializer.validated_data['quantity'])}")
+
+            # Create Order
+            order_data = {
+                'placed_by_id': request.user.id,
+                'complete': False,
+                'transaction_id': str(uuid.uuid4()),
+                'status': 'Pending',
+                'quantity': sum(item['quantity'] for item in validated_cart),
+                'name': user_details.get('name', ''),
+                'email': user_details.get('email', ''),
+                'phone': user_details.get('phone', ''),
+                'address': shipping_address.get('address', ''),
+                'city': shipping_address.get('city', ''),
+                'postal_code': shipping_address.get('postal_code', ''),
+                'cart': validated_cart,
+            }
+            serializer = OrderSerializer(data=order_data)
+            if serializer.is_valid():
+                order = serializer.save()
+                print('Order created:', order.id)
+
+                # Update product quantities
+                for item in validated_cart:
+                    product = Product.objects.get(id=item['product_id'])
+                    print(f"Product quantity: {product.quantity} (type: {type(product.quantity)}), Requested: {item['quantity']} (type: {type(item['quantity'])})")
+                    if product.quantity < item['quantity']:
                         order.delete()
                         return Response(
                             {'error': f'Only {product.quantity} of {product.name} available'},
                             status=status.HTTP_400_BAD_REQUEST
                         )
-                    ProductOrder.objects.create(
-                        order=order,
-                        product=product,
-                        quantity=quantity,
-                        date_added=timezone.now()
-                    )
-                    # Update product quantity
-                    product.quantity -= quantity
+                    product.quantity -= item['quantity']
                     product.save()
-                else:
-                    order.delete()
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create Transaction
-            transaction = Transaction.objects.create(
-                user_id=request.user,
-                order_id=order,
-                payment_method=payment_method
-            )
+                # Create Transaction
+                Transaction.objects.create(
+                    user_id=request.user,
+                    order_id=order,
+                    payment_method=payment_method
+                )
+                print('Transaction created for order:', order.id)
 
-            serializer = OrderSerializer(order)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            print('OrderSerializer errors:', serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Product.DoesNotExist:
-            order.delete()
             return Response({'error': 'One or more products not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            order.delete()
+            print('Unexpected error:', str(e))
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

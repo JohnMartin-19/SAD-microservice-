@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/v1/ai-chat/', ai_chat, name='ai_chat'),
     path('api/v1/cart/', CartView.as_view(), name='cart'),
     path('api/v1/checkout/', CheckoutView.as_view(), name='checkout'),
+    path('api/v1/send-receipt/', SendReceiptView.as_view(), name='send-receipt'),
 ]

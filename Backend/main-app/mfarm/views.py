@@ -226,7 +226,7 @@ class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
 class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
-    schema = 'drf_spectacular.openapi.AutoSchema'
+   
 
     @extend_schema(
         request={
@@ -355,7 +355,7 @@ class CheckoutView(APIView):
 
 class SendReceiptView(APIView):
     permission_classes = [IsAuthenticated]
-    schema = 'drf_spectacular.openapi.AutoSchema'
+    
 
     @extend_schema(
         request={

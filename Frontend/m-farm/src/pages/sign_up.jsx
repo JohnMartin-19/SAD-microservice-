@@ -105,7 +105,7 @@ const Signup = () => {
         localStorage.setItem('token', data.tokens.access);
         localStorage.setItem('refresh_token', data.tokens.refresh);
         console.log('Stored tokens:', data.tokens); // Debug
-        setSuccess('Account created! Redirecting to dashboard...');
+        toast.success('Account created successfully!');
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);

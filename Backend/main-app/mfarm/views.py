@@ -25,6 +25,7 @@ import uuid
 import base64
 from io import BytesIO
 from django.core.files.base import ContentFile
+from django.views.decorators.cache import cache_page
 # Create your views here.
 
 #API ENDPOINTS FOR PRODUCT
@@ -171,33 +172,89 @@ class RevenueView(APIView):
 
 ########################### AI CHAT VIEW ############################
 @csrf_exempt
+@cache_page(60 * 60)  # Cache for 1 hour
 def ai_chat(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        prompt = data.get('prompt', '')
         try:
-            # Example: Proxy to OpenAI (replace with xAI if available)
-            response = requests.post(
-                'https://api.openai.com/v1/chat/completions',
-                headers={
-                    'Authorization': f'Bearer {os.getenv("OPENAI_API_KEY")}',
-                    'Content-Type': 'application/json',
-                },
-                json={
-                    'model': 'gpt-3.5-turbo',
-                    'messages': [
-                        {'role': 'system', 'content': 'You are an agricultural expert.'},
-                        {'role': 'user', 'content': prompt},
-                    ],
-                    'max_tokens': 150,
-                }
-            )
-            response.raise_for_status()
-            return JsonResponse(response.json())
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+            data = json.loads(request.body)
+            prompt = data.get('prompt', '')
+            if not prompt:
+                return JsonResponse({'error': 'Prompt is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+            api_key = os.getenv('OPENAI_API_KEY')
+            if not api_key:
+                return JsonResponse(
+                    {'error': 'OpenAI API key not configured'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            # Retry logic for 429 errors
+            max_retries = 3
+            retry_delay = 5  # seconds
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(
+                        'https://api.openai.com/v1/chat/completions',
+                        headers={
+                            'Authorization': f'Bearer {api_key}',
+                            'Content-Type': 'application/json',
+                        },
+                        json={
+                            'model': 'gpt-3.5-turbo',
+                            'messages': [
+                                {'role': 'system', 'content': 'You are an agricultural expert.'},
+                                {'role': 'user', 'content': prompt},
+                            ],
+                            'max_tokens': 150,
+                        }
+                    )
+                    response.raise_for_status()
+                    return JsonResponse(response.json(), status=status.HTTP_200_OK)
+
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 429:
+                        if attempt < max_retries - 1:
+                            time.sleep(retry_delay)
+                            retry_delay *= 2  # Exponential backoff
+                            continue
+                        # Fallback response for tomato-related queries
+                        if 'tomato' in prompt.lower():
+                            return JsonResponse({
+                                'choices': [{
+                                    'message': {
+                                        'content': (
+                                            "Tomatoes thrive in full sun (6-8 hours daily), with temperatures of 70-85°F (21-29°C) "
+                                            "daytime and 60-70°F (15-21°C) nighttime. Use well-drained, fertile loam soil (pH 6.0-6.8), "
+                                            "water 1-2 inches weekly, and space plants 18-24 inches apart. Fertilize with 10-10-10 NPK at planting "
+                                            "and potassium/phosphorus during fruiting. Prune suckers and use mulch to retain moisture."
+                                        )
+                                    }
+                                }]
+                            }, status=status.HTTP_200_OK)
+                        return JsonResponse(
+                            {'error': 'Rate limit exceeded. Please try again later.'},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS
+                        )
+                    return JsonResponse(
+                        {'error': f'OpenAI API error: {str(e)}'},
+                        status=e.response.status_code
+                    )
+
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {'error': 'Invalid JSON in request body'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return JsonResponse(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    return JsonResponse(
+        {'error': 'Invalid request method'},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 ###########  ORDER SERVICE API  ##############

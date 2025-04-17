@@ -46,7 +46,9 @@ const ExpertConsultation = () => {
   const handleBookNow = (expert) => {
     if (!isAuthenticated()) {
       toast.error('Please log in to book a consultation.');
-      navigate('/login');
+      setTimeout(()=> {
+        navigate('/login');
+      },3000)
       return;
     }
     setSelectedExpert(expert);

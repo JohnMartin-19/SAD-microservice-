@@ -12,6 +12,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# Example: Access API key (for debugging)
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,6 +38,8 @@ SECRET_KEY = 'django-insecure-=c(@)*_b2l^!ov5+1ahfkh+@r*iss7nm9&5y*xwb$o)drkn-um
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
+
 
 
 # Application definition
@@ -121,6 +135,12 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

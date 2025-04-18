@@ -1,3 +1,4 @@
+import time
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
@@ -115,12 +116,12 @@ class LoggedInUserProductListView(APIView):
         serializer = MyProductSerializer(products, many=True)
         return Response(serializer.data)
 
-class OrderListView(APIView):
+class LoggedInUserOrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         orders = Order.objects.filter(productorder__product__user=request.user)
-        serializer = OrderSerializer(orders, many=True)
+        serializer = MyOrderSerializer(orders, many=True)
         return Response(serializer.data)
 
 class RevenueView(APIView):
@@ -217,20 +218,7 @@ def ai_chat(request):
                             time.sleep(retry_delay)
                             retry_delay *= 2  # Exponential backoff
                             continue
-                        # Fallback response for tomato-related queries
-                        if 'tomato' in prompt.lower():
-                            return JsonResponse({
-                                'choices': [{
-                                    'message': {
-                                        'content': (
-                                            "Tomatoes thrive in full sun (6-8 hours daily), with temperatures of 70-85°F (21-29°C) "
-                                            "daytime and 60-70°F (15-21°C) nighttime. Use well-drained, fertile loam soil (pH 6.0-6.8), "
-                                            "water 1-2 inches weekly, and space plants 18-24 inches apart. Fertilize with 10-10-10 NPK at planting "
-                                            "and potassium/phosphorus during fruiting. Prune suckers and use mulch to retain moisture."
-                                        )
-                                    }
-                                }]
-                            }, status=status.HTTP_200_OK)
+                       
                         return JsonResponse(
                             {'error': 'Rate limit exceeded. Please try again later.'},
                             status=status.HTTP_429_TOO_MANY_REQUESTS
@@ -322,7 +310,7 @@ class CheckoutView(APIView):
             },
             'required': ['cart', 'payment_method', 'user_details', 'shipping_address'],
         },
-        responses={201: OrderSerializer, 400: None, 401: None},
+        responses={201: MyOrderSerializer, 400: None, 401: None},
         description=(
             "Process checkout, create an order, and send email with receipt image "
             "provided by the frontend."

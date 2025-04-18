@@ -51,7 +51,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
         model = ProductOrder
         fields = ['product', 'product_id', 'quantity','product_name']
 
-class OrderSerializer(serializers.ModelSerializer):
+class MyOrderSerializer(serializers.ModelSerializer):
     productorder = ProductOrderSerializer(many=True, read_only=True)
     placed_by = UserSerializer(read_only=True)
     placed_by_id = serializers.PrimaryKeyRelatedField(
@@ -62,7 +62,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'placed_by', 'placed_by_id', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
+            'id','product','placed_by', 'placed_by_id', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
             'name', 'email', 'phone', 'address', 'city', 'postal_code', 'productorder', 'cart'
         ]
     def create(self, validated_data):

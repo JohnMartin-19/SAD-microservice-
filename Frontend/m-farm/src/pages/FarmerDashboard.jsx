@@ -82,7 +82,7 @@ const FarmerDashboard = () => {
       setListings(products);
 
       // Fetch orders
-      const orderResponse = await fetch('http://localhost:8000/mfarm/api/v1/orders/', {
+      const orderResponse = await fetch('http://localhost:8000/mfarm/api/v1/myorders/', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

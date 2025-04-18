@@ -47,7 +47,7 @@ class Product(models.Model):
 
 
 class Order(models.Model):
-    # product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product,on_delete=models.PROTECT,null=True, blank=True)
     placed_by = models.ForeignKey(CustomUser,on_delete = models.PROTECT)
     date_ordered = models.DateTimeField(auto_now_add=True, blank=False)
     complete= models.BooleanField(blank=True, null=True)

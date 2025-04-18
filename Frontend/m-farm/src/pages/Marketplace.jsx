@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
 
 const Marketplace = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -168,8 +167,8 @@ const Marketplace = () => {
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
 
       <motion.div
-        className="container py-5"
-        style={{ maxWidth: '70%' }}
+        className="container py-5 mx-auto"
+        style={{ maxWidth: '60%' }} // Increased from 70% to 90%
         initial="hidden"
         animate="visible"
         variants={staggerChildren}
@@ -222,14 +221,11 @@ const Marketplace = () => {
         ) : (
           !showCart ? (
             <motion.div className="row g-4" variants={staggerChildren}>
-              <motion.div className="col-md-3" variants={fadeInUp}>
-                <Sidebar />
-              </motion.div>
-              <motion.div className="col-md-9" variants={staggerChildren}>
+              <motion.div className="col-12" variants={staggerChildren}> {/* Changed from col-md-9 to col-12 */}
                 {filteredProducts.length === 0 ? (
                   <motion.p variants={fadeInUp}>No products found.</motion.p>
                 ) : (
-                  <motion.div className="row row-cols-1 row-cols-md-3 g-4" variants={staggerChildren}>
+                  <motion.div className="row row-cols-1 row-cols-md-4 g-4" variants={staggerChildren}> {/* Changed from row-cols-md-3 to row-cols-md-4 */}
                     {filteredProducts.map(product => (
                       <motion.div key={product.id} className="col" variants={scaleUp}>
                         <div className="card h-100 shadow-sm border-0">
@@ -237,7 +233,7 @@ const Marketplace = () => {
                             src={product.image}
                             className="card-img-top"
                             alt={product.title}
-                            style={{ height: '200px', objectFit: 'cover' }}
+                            style={{ height: '180px', objectFit: 'cover' }} // Slightly reduced height to fit 4 columns
                           />
                           <div className="card-body">
                             <h5 className="card-title fw-semibold text-dark">{product.title}</h5>
@@ -402,8 +398,6 @@ const Marketplace = () => {
           )
         )}
       </motion.div>
-
-     
     </div>
   );
 };

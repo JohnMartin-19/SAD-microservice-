@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-
+import Footer from '../components/Footer';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import QRCode from 'react-qr-code';
 import html2canvas from 'html2canvas';
+import { motion } from 'framer-motion';
 
 const Checkout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,38 +15,54 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [policyAccepted, setPolicyAccepted] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
+  const [showMpesaModal, setShowMpesaModal] = useState(false);
+  const [mpesaPhone, setMpesaPhone] = useState('');
   const receiptRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   const { cart = [], totalAmount = 0 } = location.state || {};
 
+  const [cartState, setCart] = useState(cart);
+  const [totalAmountState, setTotalAmount] = useState(totalAmount);
+
   useEffect(() => {
+    console.log('Checkout loaded. Location state:', location.state);
     const token = localStorage.getItem('token');
     if (!token) {
       console.error('No token found in localStorage');
       toast.error('Please log in to proceed.');
       navigate('/login');
-    } else {
-      console.log('Token found:', token);
+      return;
     }
+    console.log('Token found:', token);
 
+    // Load cart from sessionStorage if location.state is empty
+    let loadedCart = cart;
     if (!cart.length) {
       const savedCart = sessionStorage.getItem('cart');
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart);
-        const sanitizedCart = parsedCart.map(item => ({
+        loadedCart = parsedCart.map(item => ({
           ...item,
           quantity: parseInt(item.quantity, 10)
         }));
-        setCart(sanitizedCart);
-        setTotalAmount(sanitizedCart.reduce((sum, item) => sum + item.price * item.quantity, 0));
+        setCart(loadedCart);
+        setTotalAmount(loadedCart.reduce((sum, item) => sum + item.price * item.quantity, 0));
       }
     }
-  }, [navigate]);
 
-  const [cartState, setCart] = useState(cart);
-  const [totalAmountState, setTotalAmount] = useState(totalAmount);
+    // Redirect if cart is empty
+    if (!loadedCart.length) {
+      console.log('Cart is empty, redirecting to marketplace');
+      toast.error('Your cart is empty. Add products to proceed.');
+      navigate('/marketplace');
+    }
+  }, [navigate, cart, location.state]);
+
+  useEffect(() => {
+    console.log('Modal state:', showMpesaModal, 'Payment method:', paymentMethod);
+  }, [showMpesaModal, paymentMethod]);
 
   const handleInputChange = (e, setState) => {
     const { name, value } = e.target;
@@ -73,6 +90,63 @@ const Checkout = () => {
       link.href = receiptImage;
       link.download = `receipt_order_${receiptData?.order_id}.png`;
       link.click();
+    }
+  };
+
+  const handlePaymentMethodChange = (e) => {
+    const value = e.target.value;
+    console.log('Payment method selected:', value);
+    setPaymentMethod(value);
+    if (value === 'mpesa') {
+      console.log('Opening M-Pesa Bootstrap modal');
+      setShowMpesaModal(true);
+    } else {
+      console.log('Closing M-Pesa modal');
+      setShowMpesaModal(false);
+      setMpesaPhone('');
+    }
+  };
+
+  const validatePhoneNumber = (phone) => {
+    const regex = /^\+2547\d{8}$/;
+    return regex.test(phone);
+  };
+
+  const handleMpesaSubmit = async () => {
+    if (!validatePhoneNumber(mpesaPhone)) {
+      toast.error('Please enter a valid phone number in format +2547XXXXXXXX');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const payload = {
+      phone_number: mpesaPhone,
+      amount: totalAmountState,
+      order_id: receiptData?.order_id || 0,
+    };
+
+    try {
+      const response = await fetch('http://localhost:8000/mfarm/api/v1/mpesa/stk-push/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+      console.log('STK Push response:', responseData);
+      if (response.ok) {
+        toast.success('STK Push initiated! Check your phone.');
+        setShowMpesaModal(false);
+        setMpesaPhone('');
+      } else {
+        toast.error(responseData.error || 'Failed to initiate STK Push.');
+      }
+    } catch (error) {
+      console.error('Error initiating STK Push:', error);
+      toast.error('Error initiating STK Push. Please try again.');
     }
   };
 
@@ -125,7 +199,7 @@ const Checkout = () => {
       const responseData = await response.json();
       console.log('Checkout response:', responseData);
       if (response.ok) {
-        setReceiptData({
+        const receiptInfo = {
           order_id: responseData.id,
           name: userDetails.name,
           products: cartState.map(item => ({
@@ -141,23 +215,40 @@ const Checkout = () => {
           city: shippingAddress.city,
           postal_code: shippingAddress.postalCode,
           verify_url: `http://localhost:8000/mfarm/api/v1/order/verify/${responseData.id}/`,
-        });
+        };
+        setReceiptData(receiptInfo);
 
-        const receiptImage = await captureReceipt();
-        if (receiptImage) {
-          const emailPayload = {
-            ...payload,
-            receipt_image: receiptImage,
-          };
-          await fetch('http://localhost:8000/mfarm/api/v1/checkout/', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(emailPayload),
-          });
-        }
+        setTimeout(async () => {
+          const receiptImage = await captureReceipt();
+          if (receiptImage) {
+            const emailPayload = {
+              order_id: responseData.id,
+              email: userDetails.email,
+              name: userDetails.name,
+              receipt_image: receiptImage,
+            };
+            try {
+              const emailResponse = await fetch('http://localhost:8000/mfarm/api/v1/send-receipt/', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(emailPayload),
+              });
+              const emailData = await emailResponse.json();
+              console.log('Email response:', emailData);
+              if (!emailResponse.ok) {
+                toast.error(emailData.error || 'Failed to send receipt email.');
+              } else {
+                toast.success('Receipt email sent!');
+              }
+            } catch (emailError) {
+              console.error('Error sending email:', emailError);
+              toast.error('Error sending receipt email.');
+            }
+          }
+        }, 500);
 
         setCart([]);
         setTotalAmount(0);
@@ -171,6 +262,12 @@ const Checkout = () => {
       console.error('Network error during checkout:', error);
       toast.error('Error placing order. Please try again later.');
     }
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+    exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2 } },
   };
 
   return (
@@ -236,7 +333,7 @@ const Checkout = () => {
               <div className="card-body">
                 <h3 className="fw-semibold text-dark mb-4">Order Summary</h3>
                 {cartState.length === 0 ? (
-                  <p className="text-muted">Your cart is empty.</p>
+                  <p className="text-muted">Your cart is empty. <Link to="/marketplace">Browse products</Link>.</p>
                 ) : (
                   <>
                     <table className="table table-hover">
@@ -368,8 +465,9 @@ const Checkout = () => {
                           name="paymentMethod"
                           value={method.id}
                           className="form-check-input"
-                          onChange={e => setPaymentMethod(e.target.value)}
+                          onChange={handlePaymentMethodChange}
                           checked={paymentMethod === method.id}
+                          disabled={paymentMethod && paymentMethod !== method.id && paymentMethod === 'mpesa'}
                         />
                         <label htmlFor={method.id} className="form-check-label">
                           {method.label}
@@ -405,6 +503,73 @@ const Checkout = () => {
               </button>
             </div>
           </>
+        )}
+
+        {/* Bootstrap M-Pesa Modal */}
+        {showMpesaModal && (
+          <motion.div
+            className="modal fade show d-block"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={modalVariants}
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">M-Pesa Payment</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => {
+                      console.log('Closing M-Pesa modal');
+                      setShowMpesaModal(false);
+                      setPaymentMethod('');
+                      setMpesaPhone('');
+                    }}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label htmlFor="mpesaPhone" className="form-label">
+                      Enter Phone Number (+2547XXXXXXXX)
+                    </label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      id="mpesaPhone"
+                      value={mpesaPhone}
+                      onChange={(e) => setMpesaPhone(e.target.value)}
+                      placeholder="+2547XXXXXXXX"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      console.log('Closing M-Pesa modal');
+                      setShowMpesaModal(false);
+                      setPaymentMethod('');
+                      setMpesaPhone('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={handleMpesaSubmit}
+                  >
+                    Initiate STK Push
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </div>
 

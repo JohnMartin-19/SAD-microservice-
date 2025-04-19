@@ -13,4 +13,5 @@ urlpatterns = [
     path('api/v1/cart/', CartView.as_view(), name='cart'),
     path('api/v1/checkout/', CheckoutView.as_view(), name='checkout'),
     path('api/v1/send-receipt/', SendReceiptView.as_view(), name='send-receipt'),
+    path('api/v1/mpesa/stk-push/', STKPushAPIView.as_view(), name='STK Push')
 ]

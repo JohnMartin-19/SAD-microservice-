@@ -23,6 +23,7 @@ from drf_spectacular.utils import extend_schema
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 import uuid
+import datetime
 import base64
 from io import BytesIO
 from django.core.files.base import ContentFile
@@ -465,101 +466,104 @@ class SendReceiptView(APIView):
 
 ########################################## PAYMENTS APIS ###########################################
 #### MPESA STK
-def generate_access_token():
-    consumer_key = settings.MPESA_CONSUMER_KEY
-    consumer_secret = settings.MPESA_CONSUMER_SECRET
+class STKPushAPIView(APIView):
+    ############GENERATES AND RETURNS ACCESS TOKEN
+    def get(request):
+        consumer_key = settings.MPESA_CONSUMER_KEY
+        consumer_secret = settings.MPESA_CONSUMER_SECRET
 
 
-    # check that the credentials are provided
-    if not consumer_key or not consumer_secret:
-        raise Exception("M-Pesa consumer key or secret not found in environment variables")
+        # check that the credentials are provided
+        if not consumer_key or not consumer_secret:
+            raise Exception("M-Pesa consumer key or secret not found in environment variables")
 
-    url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-    try:
-        encoded_credentials = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
-        headers = {
-            "Authorization": f"Basic {encoded_credentials}",
-            "Content-Type": "application/json"
-        }
-        response = requests.get(url, headers=headers).json()
-        print(response)
-        if "access_token" in response:
-            return response["access_token"]
-        else:
-            raise Exception("Failed to get access token: " + response.get("error_description", "Unknown error"))
-    except Exception as e:
-        raise Exception("Failed to get access token: " + str(e))
-
-def stkpush(request):
-    """
-    STK push endpoint.
-    """
-    try:
-        access_token = generate_access_token()
-        headers = {"Authorization": f"Bearer {access_token}"}
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
-        pass_key = settings.MPESA_PASS_KEY
-
-        # Validate that the credentials are provided
-        if not business_short_code or not pass_key:
-            raise Exception("M-Pesa business short code or pass key not found in environment variables")
-
-        data = json.loads(request.body)
-        phone_number = data.get('phone_number')
-        amount = data.get('amount')
-        web_name = "E-TICKETS"
-        stk_password = base64.b64encode((business_short_code + pass_key + timestamp).encode('utf-8')).decode('utf-8')
-
-        payload = {
-            "BusinessShortCode": business_short_code,
-            "Password": stk_password,
-            "Timestamp": timestamp,
-            "TransactionType": "CustomerPayBillOnline",
-            "Amount": amount,
-            "PartyA": phone_number,
-            "PartyB": business_short_code,
-            "PhoneNumber": phone_number,
-            "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/",
-            "AccountReference": web_name,
-            "TransactionDesc": "Payment of a ticket",
-        }
-
-        response = requests.post(
-            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-            headers=headers,
-            json=payload,
-        )
-
-        return JsonResponse(response.json())
-
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({'error': f'Request error: {e}'}, status=500)
-    except Exception as e:
-        print(f"Error in stkpush: {e}")
-        return JsonResponse({'error': 'Internal server error'}, status=500)
-
-@csrf_exempt
-def mpesa_callback(request):
-    if request.method == 'POST':
+        url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
         try:
-            callback_data = json.loads(request.body)
-            print("M-Pesa callback received:", callback_data)
-
-            result_code = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
-            result_desc = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultDesc")
-
-            if result_code == 0:
-                print("Payment successful: ", result_desc)
-                return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
+            encoded_credentials = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
+            headers = {
+                "Authorization": f"Basic {encoded_credentials}",
+                "Content-Type": "application/json"
+            }
+            response = requests.get(url, headers=headers).json()
+            print(response)
+            if "access_token" in response:
+                return response["access_token"]
             else:
-                print(f"Payment failed: {result_desc}")
-                return JsonResponse({"ResultCode": 1, "ResultDesc": "Payment failed"})
-
+                raise Exception("Failed to get access token: " + response.get("error_description", "Unknown error"))
         except Exception as e:
-            print(f"Error processing M-Pesa callback: {e}")
-            return JsonResponse({"ResultCode": 1, "ResultDesc": "Error"})
-    else:
-        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid request method"})
+            raise Exception("Failed to get access token: " + str(e))
+
+    ######INITIATES THE STK PUSH TO BE SENT ############
+    def post(self,request):
+        """
+        STK push endpoint.
+        """
+        try:
+            access_token = self.get()
+            headers = {"Authorization": f"Bearer {access_token}"}
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
+            pass_key = settings.MPESA_PASS_KEY
+
+            # Validate that the credentials are provided
+            if not business_short_code or not pass_key:
+                raise Exception("M-Pesa business short code or pass key not found in environment variables")
+
+            data = json.loads(request.body)
+            phone_number = data.get('phone_number')
+            amount = data.get('amount')
+            web_name = "M-FARM"
+            stk_password = base64.b64encode((business_short_code + pass_key + timestamp).encode('utf-8')).decode('utf-8')
+
+            payload = {
+                "BusinessShortCode": business_short_code,
+                "Password": stk_password,
+                "Timestamp": timestamp,
+                "TransactionType": "CustomerPayBillOnline",
+                "Amount": amount,
+                "PartyA": phone_number,
+                "PartyB": business_short_code,
+                "PhoneNumber": phone_number,
+                "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/",
+                "AccountReference": web_name,
+                "TransactionDesc": "Payment of a ticket",
+            }
+
+            response = requests.post(
+                "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+                headers=headers,
+                json=payload,
+            )
+
+            return JsonResponse(response.json())
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({'error': f'Request error: {e}'}, status=500)
+        except Exception as e:
+            print(f"Error in stkpush: {e}")
+            return JsonResponse({'error': 'Internal server error'}, status=500)
+
+    @csrf_exempt
+    def mpesa_callback(request):
+        if request.method == 'POST':
+            try:
+                callback_data = json.loads(request.body)
+                print("M-Pesa callback received:", callback_data)
+
+                result_code = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
+                result_desc = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultDesc")
+
+                if result_code == 0:
+                    print("Payment successful: ", result_desc)
+                    return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
+                else:
+                    print(f"Payment failed: {result_desc}")
+                    return JsonResponse({"ResultCode": 1, "ResultDesc": "Payment failed"})
+
+            except Exception as e:
+                print(f"Error processing M-Pesa callback: {e}")
+                return JsonResponse({"ResultCode": 1, "ResultDesc": "Error"})
+        else:
+            return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid request method"})

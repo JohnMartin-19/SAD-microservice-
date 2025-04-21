@@ -1,0 +1,536 @@
+/* General Responsive Reset */
+* {
+    box-sizing: border-box; /* Ensures padding/margin are included in width/height */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: hsl(0, 0%, 98%);
+    margin: 0; /* Removes default margin */
+    padding: 0; /* Removes default padding */
+    width: 100%; /* Ensures full width */
+    overflow-x: hidden; /* Prevents horizontal scroll */
+}
+
+h1, h2,  h4, h5, h6 {
+    color: hsl(0, 0%, 30%);
+}
+
+.container {
+    width: 100%; /* Ensures container takes full width */
+    padding: 0; 
+}
+
+.box-element {
+    box-shadow: hsl(0, 0%, 80%) 0 0 16px;
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.thumbnail {
+    width: 100%;
+    height: 200px;
+    -webkit-box-shadow: -1px -3px 5px -2px rgba(214, 214, 214, 1);
+    -moz-box-shadow: -1px -3px 5px -2px rgba(214, 214, 214, 1);
+    box-shadow: -1px -3px 5px -2px rgba(214, 214, 214, 1);
+}
+
+.product {
+    border-radius: 0 0 4px 4px;
+}
+
+.bg-dark {
+    background-color: #4f868c !important;
+}
+
+#cart-icon {
+    width: 25px;
+    display: inline-block;
+    margin-left: 15px;
+}
+
+#cart-total {
+    display: block;
+    text-align: center;
+    color: #fff;
+    background-color: red;
+    width: 20px;
+    height: 25px;
+    border-radius: 50%;
+    font-size: 14px;
+}
+
+.col-lg-4, .col-lg-6, .col-lg-8, .col-lg-12 {
+    margin-top: 10px;
+}
+
+.btn {
+    border-radius: 0;
+}
+
+.row-image {
+    width: 100px;
+}
+
+.form-field {
+    width: 250px;
+    display: inline-block;
+    padding: 5px;
+}
+
+.cart-row {
+    display: flex;
+    align-items: flex-stretch;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ececec;
+}
+
+.quantity {
+    display: inline-block;
+    font-weight: 700;
+    padding-right: 10px;
+}
+
+.chg-quantity {
+    width: 12px;
+    cursor: pointer;
+    display: block;
+    margin-top: 5px;
+    transition: .1s;
+}
+
+.chg-quantity:hover {
+    opacity: .6;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .form-field {
+        width: 100%; /* Full width on smaller screens */
+        padding: 10px; /* Increased padding for touch targets */
+    }
+
+    .cart-row {
+        flex-direction: column; /* Stack items vertically */
+        align-items: flex-start; /* Align items to start */
+    }
+
+    .col-lg-4, .col-lg-6, .col-lg-8, .col-lg-12 {
+        margin-top: 5px; /* Reduce margin */
+    }
+}
+
+@media (max-width: 768px) {
+    h1, h2, h3, h4, h5, h6 {
+        font-size: calc(1.5rem + 1vw); /* Responsive font size */
+    }
+
+    .box-element {
+        padding: 15px; /* More padding on smaller screens */
+    }
+
+    .thumbnail {
+        height: 150px; /* Adjust thumbnail height for smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .form-field {
+        width: 100%; /* Full width for very small screens */
+    }
+
+    #cart-total {
+        width: 30px; /* Increase size for better visibility */
+        height: 30px; /* Increase height for better visibility */
+        font-size: 12px; /* Adjust font size */
+    }
+
+    .btn {
+        width: 100%; /* Full-width buttons on small screens */
+        margin-bottom: 10px; /* Space between buttons */
+    }
+}
+
+/* landing css */
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.carousel-inner {
+    position: relative;
+}
+
+.carousel-inner img {
+    height: 80vh; /* Full viewport height */
+    width: 100%;   /* Full width */
+    object-fit: cover; /* Ensures the image covers the area without distortion */
+    object-position: center; /* Centers the image within the carousel */
+}
+
+
+.carousel-item {
+    position: relative;
+}
+
+.carousel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Dark tint over the slides */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.carousel-form {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent white background */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 80%; /* Adjust form width */
+    justify-content: space-between; /* Distributes the space evenly */
+    align-items: center; /* Vertically centers the form inputs */
+    gap: 30px; 
+}
+
+.carousel-form .form-group {
+    margin-bottom: 15px; /* Space between input fields */
+    flex: 1;
+}
+
+.form-group input {
+    height: 40px; /* Sets the height of the input field */
+    width: 100%;  /* Makes the input take the full width of its container */
+    padding: 10px; /* Adds padding inside the input for a better visual appearance */
+    font-size: 16px; /* Adjust the text size inside the input */
+    border-radius: 5px; /* Optional: Rounds the corners of the input */
+    border: 1px solid black; /* Optional: Adds a border around the input */
+}
+
+
+.carousel-form .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .carousel-form {
+        width: 90%; /* Make the form a bit smaller on smaller screens */
+    }
+}
+
+/* Responsive container */
+.container {
+    width: 100%; /* Ensures container takes full width */
+    padding: 0;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+}
+
+/* Upcoming Events Section */
+.upcoming-events {
+    padding: 50px 20px;
+    text-align: center;
+    background-color: #f7f7f7;
+    animation: fadeIn 3s ease;
+}
+
+.upcoming-events h2 {
+    font-size: 3rem;
+    margin-bottom: 40px;
+}
+
+.event-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns layout */
+    gap: 20px; /* spacing between cards */
+}
+
+.event-card {
+    position: relative;
+    overflow: hidden;
+    height: 300px; /* Set a fixed height for all cards */
+}
+
+.event-card img {
+    width: 100%;
+    height: 100%; /* Make sure images fill the height of the card */
+    object-fit: cover; /* Ensures the image covers the entire card while maintaining aspect ratio */
+    transition: transform 0.3s ease; /* Smooth zoom effect on hover */
+}
+
+.event-card:hover img {
+    transform: scale(1.1); /* Zoom the image slightly */
+}
+
+.event-info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+    opacity: 0;
+    color: #fff;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    padding: 20px;
+}
+
+.event-card:hover .event-info {
+    opacity: 1; /* Show text on hover */
+}
+
+
+/* General Footer Styles */
+.footer {
+    background-color: #333;
+    color: white;
+    width: 100%; /* Full width */
+    height: 75vh; /* Takes 75% of the viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Space between footer content and bottom text */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.footer-container {
+    margin-top: 70px;
+    display: flex;
+    justify-content: space-between; /* Space between left and right sections */
+    max-width: 1200px; /* Limits content width on larger screens */
+    margin-left: 130px;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    padding: 20px 0;
+}
+
+/* Left side (3 columns) */
+.footer-left {
+    display: flex;
+    flex: 3; /* Takes more space on the left */
+    gap: 30px; /* Space between the columns */
+}
+
+/* Right side (1 column) */
+.footer-right {
+    flex: 1; /* Takes less space */
+}
+
+.footer-column {
+    flex-basis: 100%;
+}
+
+.footer-column h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.footer-column ul, .footer-column p {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.footer-column ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+.footer-column ul li a:hover {
+    text-decoration: underline;
+}
+
+.social-media {
+    display: flex;
+    gap: 10px;
+}
+
+.social-media li {
+    display: inline-block;
+}
+
+/* Bottom Footer Text */
+.bottom {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #aaa;
+    padding: 10px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-left, .footer-right {
+        width: 100%;
+    }
+
+    .footer-left {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .footer-column {
+        flex: none;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .footer-right {
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .footer-left {
+        flex-direction: column;
+    }
+
+    .footer-column {
+        text-align: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .footer-column {
+        text-align: center;
+    }
+}
+
+
+/* About Us Section */
+.about-us {
+    padding: 4rem 2rem;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+    min-height: 75vh; /* Changed from fixed height to min-height */
+    align-items: center;
+}
+
+/* Responsive Design for Upcoming Events and Footer */
+@media (max-width: 1024px) {
+    .event-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .footer-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .event-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .event-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-column {
+        margin-bottom: 20px;
+    }
+}
+
+/* 2K Resolution (2560x1440) */
+@media (min-width: 2560px) {
+    .form-field {
+        width: 400px; /* Larger input field for higher resolution */
+    }
+
+    .thumbnail {
+        height: 300px; /* Adjusted thumbnail size */
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-size: calc(1.75rem + 1vw); /* Larger font sizes */
+    }
+
+    /* Increase padding and font sizes in other components as needed */
+}
+
+/* 3K Resolution (2880x1620) */
+@media (min-width: 2880px) {
+    .form-field {
+        width: 450px;
+    }
+
+    .thumbnail {
+        height: 350px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-size: calc(2rem + 1vw);
+    }
+}
+
+/* 4K Resolution (3840x2160) */
+@media (min-width: 3840px) {
+    .form-field {
+        width: 500px;
+    }
+
+    .thumbnail {
+        height: 400px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-size: calc(2.5rem + 1vw);
+    }
+
+    .carousel-form {
+        width: 70%; /* Adjust form width for larger screens */
+    }
+}

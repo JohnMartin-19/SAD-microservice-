@@ -104,3 +104,15 @@ class UserProfileAPIView(APIView):
         user = request.user
         user.delete()
         return Response({'message': 'User account deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+
+class UserDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)

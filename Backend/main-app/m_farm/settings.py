@@ -133,7 +133,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 #CORS ALLOW ORIGIN
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8001']
 
 
 # Database

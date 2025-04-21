@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Dropdown } from 'react-bootstrap';
 
+// Styled components
 const HeaderWrapper = styled.header`
   display: flex;
   justify-content: space-between;
@@ -15,6 +18,7 @@ const HeaderWrapper = styled.header`
 const Nav = styled.nav`
   display: flex;
   gap: 1.5rem;
+  align-items: center;
 
   a, button {
     color: white;
@@ -84,38 +88,111 @@ const OverlayMessage = styled.p`
   text-align: center;
 `;
 
+const ProfileImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid white;
+
+  &:hover {
+    border-color: #e0e0e0;
+  }
+`;
+
+const PlaceholderImage = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc;
+  border: 2px solid white;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #e0e0e0;
+  }
+`;
+
+// Styled Dropdown Menu
+const StyledDropdownMenu = styled(Dropdown.Menu)`
+  background-color: #2e7d32 !important;
+  border: none;
+
+  .dropdown-item {
+    color: white;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+
+    &:hover {
+      background-color: #1b5e20; /* Darker green on hover */
+      color: #e0e0e0;
+    }
+
+    &:active {
+      background-color: #1b5e20;
+      color: white;
+    }
+  }
+`;
+
 const Header = ({ isOpen, toggleMenu }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
-  const isAuthenticated = !!localStorage.getItem('token'); // Check if token exists
+  const isAuthenticated = !!localStorage.getItem('token');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchUserProfile = async () => {
+        try {
+          const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUserProfile(data);
+          } else {
+            console.error('Failed to fetch profile');
+          }
+        } catch (err) {
+          console.error('Profile fetch error:', err);
+        }
+      };
+      fetchUserProfile();
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true); // Show overlay
+    setIsLoggingOut(true);
     try {
-      await fetch('http://localhost:8000/accounts/api/v1/logout/', {
+      await fetch('http://localhost:8001/accounts/api/v1/logout/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      localStorage.removeItem('token'); // Remove token regardless of response
+      localStorage.removeItem('token');
     } catch (err) {
       console.error('Logout error:', err);
-      localStorage.removeItem('token'); // Remove token even if API fails
+      localStorage.removeItem('token');
     }
 
-    // Wait 5 seconds before redirecting
     setTimeout(() => {
       setIsLoggingOut(false);
       navigate('/');
-    }, 3000); // 5000ms = 5 seconds
+    }, 3000);
   };
 
   return (
     <>
       <HeaderWrapper>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
+        <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
           <h1>M-Farm</h1>
         </Link>
         <Nav isOpen={isOpen}>
@@ -123,9 +200,24 @@ const Header = ({ isOpen, toggleMenu }) => {
           <Link to="/marketplace">Marketplace</Link>
           <Link to="/experts">Experts</Link>
           <Link to="/dashboard">Dashboard</Link>
-          <Link to="/profile">Profile</Link>
           {isAuthenticated ? (
-            <button onClick={handleLogout}>Logout</button>
+            <Dropdown>
+              <Dropdown.Toggle as="div" id="profile-dropdown">
+                {userProfile && userProfile.photo ? (
+                  <ProfileImage src={userProfile.photo} alt="Profile" />
+                ) : (
+                  <PlaceholderImage />
+                )}
+              </Dropdown.Toggle>
+              <StyledDropdownMenu align="end">
+                <Dropdown.Item as={Link} to="/profile">
+                  Profile
+                </Dropdown.Item>
+                <Dropdown.Item as="button" onClick={handleLogout}>
+                  Logout
+                </Dropdown.Item>
+              </StyledDropdownMenu>
+            </Dropdown>
           ) : (
             <>
               <Link to="/login">Login</Link>

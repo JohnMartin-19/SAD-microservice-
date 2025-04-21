@@ -19,7 +19,7 @@ const FarmerDashboard = () => {
     description: '',
     price: '',
     quantity: '',
-    product_location: '', // Added product_location
+    product_location: '',
     image: null,
   });
   const [revenue, setRevenue] = useState({ day: 0, week: 0, month: 0, year: 0 });
@@ -68,52 +68,31 @@ const FarmerDashboard = () => {
   // Fetch dynamic data
   const fetchDashboardData = async (token) => {
     try {
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
       // Fetch products
-      const productResponse = await fetch('http://localhost:8000/mfarm/api/v1/myproducts/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!productResponse.ok) {
-        throw new Error('Failed to fetch products');
-      }
+      const productResponse = await fetch('http://localhost:8000/mfarm/api/v1/myproducts/', { headers });
+      if (!productResponse.ok) throw new Error('Failed to fetch products');
       const products = await productResponse.json();
       setListings(products);
 
       // Fetch orders
-      const orderResponse = await fetch('http://localhost:8000/mfarm/api/v1/myorders/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!orderResponse.ok) {
-        throw new Error('Failed to fetch orders');
-      }
+      const orderResponse = await fetch('http://localhost:8000/mfarm/api/v1/myorders/', { headers });
+      if (!orderResponse.ok) throw new Error('Failed to fetch orders');
       const orders = await orderResponse.json();
       setOrders(orders);
 
       // Fetch revenue
-      const revenueResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!revenueResponse.ok) {
-        throw new Error('Failed to fetch revenue');
-      }
+      const revenueResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', { headers });
+      if (!revenueResponse.ok) throw new Error('Failed to fetch revenue');
       const revenueData = await revenueResponse.json();
       setRevenue(revenueData);
 
       // Fetch sales data for chart
-      const salesResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const salesResponse = await fetch('http://localhost:8000/mfarm/api/v1/revenue/', { headers });
       if (salesResponse.ok) {
         const salesData = await salesResponse.json();
         setChartData({
@@ -135,8 +114,29 @@ const FarmerDashboard = () => {
     }
   };
 
+  const refreshToken = async () => {
+    const refresh = localStorage.getItem('refresh_token');
+    if (!refresh) return null;
+    try {
+      const response = await fetch('http://localhost:8000/mfarm/api/v1/token/refresh/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.access);
+        return data.access;
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    }
+    return null;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Input changed: ${name}=${value}`);
     setFormData({ ...formData, [name]: value });
   };
 
@@ -146,26 +146,57 @@ const FarmerDashboard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    console.log('Tkone', token)
+    let token = localStorage.getItem('token');
+    console.log('My token',token)
+    if (!token) {
+      toast.error('No token found. Please log in again.');
+      setTimeout(()=>{
+        navigate('/login');
+      },3000)
+      return;
+    }
+
     const formDataToSend = new FormData();
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('price', formData.price);
     formDataToSend.append('quantity', formData.quantity);
-    formDataToSend.append('product_location', formData.product_location); // Added product_location
+    formDataToSend.append('product_location', formData.product_location);
     if (formData.image) {
       formDataToSend.append('image', formData.image);
     }
 
+    // Log FormData contents
+    for (const [key, value] of formDataToSend.entries()) {
+      console.log(`${key}:`, value);
+    }
+
     try {
-      const response = await fetch('http://localhost:8000/mfarm/api/v1/products/', { // Updated to /products/
+      let response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
         body: formDataToSend,
       });
+
+      if (response.status === 401) {
+        token = await refreshToken();
+        if (!token) {
+          toast.error('Session expired. Please log in again.');
+          setTimeout(()=>{
+            navigate('/login')
+          },3000)
+          return;
+        }
+        response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formDataToSend,
+        });
+      }
 
       if (response.ok) {
         const newProduct = await response.json();

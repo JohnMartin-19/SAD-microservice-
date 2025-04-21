@@ -22,7 +22,7 @@ FARM_CATEGORIES = (
 
 class Product(models.Model):
     name = models.CharField(blank=False, max_length=100, null=True)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user_id = models.CharField(max_length=100, blank=False,null=True)
     description = models.CharField(blank=True, null=True, max_length=250)
     quantity = models.PositiveIntegerField(null=True,blank=True)
     product_location = models.CharField(blank=True, null=True, max_length=150)
@@ -48,7 +48,7 @@ class Product(models.Model):
 
 class Order(models.Model):
     product = models.ForeignKey(Product,on_delete=models.PROTECT,null=True, blank=True)
-    placed_by = models.ForeignKey(CustomUser,on_delete = models.PROTECT)
+    placed_by_id = models.CharField(max_length=100, blank=False,null=True)
     date_ordered = models.DateTimeField(auto_now_add=True, blank=False)
     complete= models.BooleanField(blank=True, null=True)
     transaction_id = models.CharField(max_length=40,null=True, blank=True )

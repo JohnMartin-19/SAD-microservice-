@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 class RegisterAPIView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
+        print('Incoming new user',serializer)
         if serializer.is_valid():
             user = serializer.save()
             # Generate JWT tokens

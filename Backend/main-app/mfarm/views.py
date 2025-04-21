@@ -28,6 +28,11 @@ import base64
 from io import BytesIO
 from django.core.files.base import ContentFile
 from django.views.decorators.cache import cache_page
+import logging
+
+
+
+logger = logging.getLogger(__name__)
 # Create your views here.
 
 #API ENDPOINTS FOR PRODUCT
@@ -43,16 +48,20 @@ class ProductListCreateView(APIView):
         serializer = ProductSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+   
+    
     def post(self, request):
         """
         Create a new product.
         """
+        logger.info(f"Request headers: {request.META.get('HTTP_AUTHORIZATION')}")
+        logger.info(f"Request user: {request.user}")
+
         serializer = ProductSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            product = serializer.save()
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class ProductRetrieveUpdateDeleteView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]  # allow unauthenticated users GET, authenticated PUT/DELETE
 

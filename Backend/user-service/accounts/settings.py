@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-x_+!s$!0lcyc*6!)+$lv5l+fo9clm0%h3_a+fu)h_5w*67lnz@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+
+#CORS ALLOW ORIGIN
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
 
 
 # Application definition
@@ -37,12 +41,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #3rd party apps
+    #3rd party
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+    'rest_framework_simplejwt',
+    'drf_spectacular',
+
+    #local apps
     "accs.apps.AccsConfig",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -122,11 +137,6 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
-
-# CORS (for frontend at http://localhost:3000)
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-]
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

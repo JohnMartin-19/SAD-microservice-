@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import *
-from accounts.models import CustomUser
 from datetime import datetime
 #pupose for the user serializer is to return a nested response.
 class UserSerializer(serializers.ModelSerializer):

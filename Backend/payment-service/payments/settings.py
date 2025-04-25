@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #local app installed
+    "pay.apps.PayConfig",
 ]
 
 MIDDLEWARE = [

@@ -5,11 +5,11 @@ import requests
 import jwt
 from django.conf import settings
 
-#pupose for the user serializer is to return a nested response.
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ['username', 'email']
+# #pupose for the user serializer is to return a nested response.
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CustomUser
+#         fields = ['username', 'email']
 
 class ProductSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
@@ -79,16 +79,13 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 
 class MyOrderSerializer(serializers.ModelSerializer):
     productorder = ProductOrderSerializer(many=True, read_only=True)
-    placed_by = UserSerializer(read_only=True)
-    placed_by_id = serializers.PrimaryKeyRelatedField(
-        queryset=CustomUser.objects.all(), source='placed_by', write_only=True
-    )
+  
     cart = ProductOrderSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
         fields = [
-            'id','product','placed_by', 'placed_by_id', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
+            'id','product', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
             'name', 'email', 'phone', 'address', 'city', 'postal_code', 'productorder', 'cart'
         ]
     def create(self, validated_data):

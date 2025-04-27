@@ -1,5 +1,4 @@
 from django.db import models
-from accounts.models import CustomUser
 
 # Define categories as a tuple of (value, display_name) pairs
 FARM_CATEGORIES = (
@@ -22,7 +21,7 @@ FARM_CATEGORIES = (
 
 class Product(models.Model):
     name = models.CharField(blank=False, max_length=100, null=True)
-    user_id = models.CharField(max_length=100, blank=False,null=True)
+    user_username = models.CharField(max_length=150, db_index=True)
     description = models.CharField(blank=True, null=True, max_length=250)
     quantity = models.PositiveIntegerField(null=True,blank=True)
     product_location = models.CharField(blank=True, null=True, max_length=150)

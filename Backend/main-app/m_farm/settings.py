@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     'drf_spectacular',
     #local apps
     "mfarm.apps.MfarmConfig",
-    "accounts.apps.AccountsConfig",
 ]
 
 MIDDLEWARE = [

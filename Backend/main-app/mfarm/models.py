@@ -82,7 +82,6 @@ class ProductOrder(models.Model):
     
 
 class Transaction(models.Model):
-    user_id = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     order_id = models.ForeignKey(Order, on_delete = models.PROTECT)
     timestamp = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     payment_method = models.CharField(max_length=100, null=True, blank=True)

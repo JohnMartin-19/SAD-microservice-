@@ -203,7 +203,6 @@ MEDIA_ROOT = BASE_DIR / "static/uploads"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = "accounts.CustomUser"
 
 
 # Email settings for Gmail SMTP

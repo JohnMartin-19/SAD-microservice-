@@ -114,11 +114,13 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',  # Allow unauthenticated access to registration/login
     ],
      'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'user': '50/hour',  # Adjust based on OpenAI limits
-    }
+        'anon': '1000/day',  # Less restrictive for anonymous users
+        'user': '1000/hour',  # Allow 1000 requests per hour for authenticated users
+    },
 }
 
 

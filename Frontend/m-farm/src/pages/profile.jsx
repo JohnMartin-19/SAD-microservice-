@@ -49,7 +49,7 @@ const Profile = () => {
     } else {
       fetchProfileData(token);
     }
-  }, [navigate]);
+  },);
 
   const fetchProfileData = async (token) => {
     try {

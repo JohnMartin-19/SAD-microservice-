@@ -48,8 +48,13 @@ class ProductSerializer(serializers.ModelSerializer):
 class MyProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['name', 'price', 'description', 'quantity', 'product_location', 'image']
-        read_only_fields = ['user_id']
+        fields = ['name', 'price','user_username','description', 'quantity', 'product_location', 'image']
+        read_only_fields = ['id', 'user_username']
+
+    def create(self, validated_data):
+        # Automatically set user_username from the authenticated user
+        validated_data['user_username'] = self.context['request'].user.username
+        return super().create(validated_data)
 
 # class OrderSerializer(serializers.ModelSerializer):
 #     product = serializers.CharField(source='product.name')

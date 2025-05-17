@@ -118,7 +118,7 @@ const FarmerDashboard = () => {
     const refresh = localStorage.getItem('refresh_token');
     if (!refresh) return null;
     try {
-      const response = await fetch('http://localhost:8000/mfarm/api/v1/token/refresh/', {
+      const response = await fetch('http://localhost:8002/accounts/api/v1/token/refresh/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh }),
@@ -170,10 +170,12 @@ const FarmerDashboard = () => {
     for (const [key, value] of formDataToSend.entries()) {
       console.log(`${key}:`, value);
     }
-
+    
     try {
+      token = localStorage.getItem('token')
       let response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
         method: 'POST',
+        
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -182,13 +184,7 @@ const FarmerDashboard = () => {
 
       if (response.status === 401) {
         token = await refreshToken();
-        if (!token) {
-          toast.error('Session expired. Please log in again.');
-          setTimeout(()=>{
-            navigate('/login')
-          },3000)
-          return;
-        }
+       
         response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
           method: 'POST',
           headers: {

@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['*']
 
 
 #CORS ALLOW ORIGIN
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3002']
 
 
 # Application definition
@@ -84,6 +84,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'accounts.wsgi.application'
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'M-Farm Accounts App API Docs',
+    'DESCRIPTION': 'API for M-FARM agricultural marketplace',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 
 # Database
@@ -141,15 +148,15 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Allow unauthenticated access to registration/login
+        'rest_framework.permissions.AllowAny', 
     ],
      'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '1000/day',  # Less restrictive for anonymous users
-        'user': '1000/hour',  # Allow 1000 requests per hour for authenticated users
+        'anon': '1000/day', 
+        'user': '1000/hour', #rate limitting to the API endpoints per user per hour.
     },
 }
 

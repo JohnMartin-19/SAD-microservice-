@@ -80,7 +80,7 @@ const Login = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:8001/accounts/api/v1/login/', {
+      const response = await fetch('http://localhost:8002/accounts/api/v1/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

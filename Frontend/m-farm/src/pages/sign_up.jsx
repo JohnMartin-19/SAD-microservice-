@@ -90,7 +90,7 @@ const Signup = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:8001/accounts/api/v1/register/', {
+      const response = await fetch('http://localhost:8002/accounts/api/v1/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -100,11 +100,11 @@ const Signup = () => {
         }),
       });
       const data = await response.json();
-      console.log('Signup response:', data); // Debug
+      console.log('Signup response:', data); 
       if (response.ok) {
         localStorage.setItem('token', data.tokens.access);
         localStorage.setItem('refresh_token', data.tokens.refresh);
-        console.log('Stored tokens:', data.tokens); // Debug
+        console.log('Stored tokens:', data.tokens); 
         toast.success('Account created successfully!');
         setTimeout(() => {
           navigate('/dashboard');

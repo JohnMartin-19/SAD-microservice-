@@ -35,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-=c(@)*_b2l^!ov5+1ahfkh+@r*iss7nm9&5y*xwb$o)drkn-um'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -118,8 +118,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '1000/day',  # Less restrictive for anonymous users
-        'user': '1000/hour',  # Allow 1000 requests per hour for authenticated users
+        'anon': '1000/day',  
+        'user': '1000/hour',  
     },
 }
 
@@ -134,7 +134,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 #CORS ALLOW ORIGIN
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8001']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3002','http://localhost:8002','http://localhost:8000']
 
 
 # Database

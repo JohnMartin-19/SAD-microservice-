@@ -77,7 +77,7 @@ const Marketplace = () => {
         const data = await response.json();
         console.log('API Response:', data);
         const mappedProducts = data.map((product, index) => ({
-          id: product.id || `temp-id-${index}`, // Fallback ID
+          id: product.id || `temp-id-${index}`,
           title: product.name || 'Untitled',
           price: product.price ? parseFloat(product.price) : (product.quantity ? parseFloat(product.quantity) * 50 : 500),
           seller: product.user?.username || 'Unknown',
@@ -221,7 +221,7 @@ const Marketplace = () => {
         ) : (
           !showCart ? (
             <motion.div className="row g-4" variants={staggerChildren}>
-              <motion.div className="col-12" variants={staggerChildren}> {/* Changed from col-md-9 to col-12 */}
+              <motion.div className="col-12" variants={staggerChildren}> 
                 {filteredProducts.length === 0 ? (
                   <motion.p variants={fadeInUp}>No products found.</motion.p>
                 ) : (

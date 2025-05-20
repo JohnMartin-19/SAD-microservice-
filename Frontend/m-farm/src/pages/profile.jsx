@@ -53,7 +53,7 @@ const Profile = () => {
 
   const fetchProfileData = async (token) => {
     try {
-      const response = await fetch('http://localhost:8002/accounts/api/v1/profile/', {
+      const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -65,7 +65,7 @@ const Profile = () => {
       }
       const data = await response.json();
       setProfile(data);
-      setPhotoPreview(data.photo ? `http://localhost:8002${data.photo}` : null);
+      setPhotoPreview(data.photo ? `http://localhost:8001${data.photo}` : null);
     } catch (err) {
       console.error('Fetch error:', err.message);
       setError(err.message);
@@ -99,7 +99,7 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8002/accounts/api/v1/profile/', {
+      const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -113,7 +113,7 @@ const Profile = () => {
       }
       const updatedProfile = await response.json();
       setProfile(updatedProfile);
-      setPhotoPreview(updatedProfile.photo ? `http://localhost:8002${updatedProfile.photo}` : null);
+      setPhotoPreview(updatedProfile.photo ? `http://localhost:8001${updatedProfile.photo}` : null);
       setIsEditing(false);
       setError(null);
     } catch (err) {
@@ -128,7 +128,7 @@ const Profile = () => {
     }
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:8002/accounts/api/v1/profile/', {
+      const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

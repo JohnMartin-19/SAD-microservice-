@@ -118,7 +118,7 @@ const FarmerDashboard = () => {
     const refresh = localStorage.getItem('refresh_token');
     if (!refresh) return null;
     try {
-      const response = await fetch('http://localhost:8002/accounts/api/v1/token/refresh/', {
+      const response = await fetch('http://localhost:8001/accounts/api/v1/token/refresh/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh }),
@@ -157,6 +157,7 @@ const FarmerDashboard = () => {
     }
 
     const formDataToSend = new FormData();
+    formDataToSend.append('user',token)
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('price', formData.price);
@@ -173,6 +174,7 @@ const FarmerDashboard = () => {
     
     try {
       token = localStorage.getItem('token')
+      console.log('tokeniiiii',token)
       let response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
         method: 'POST',
         

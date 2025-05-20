@@ -58,6 +58,7 @@ class ProductListCreateView(APIView):
         logger.info(f"Request user: {request.user}")
 
         serializer = ProductSerializer(data=request.data, context={'request': request})
+        print("My User",request.data.user)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

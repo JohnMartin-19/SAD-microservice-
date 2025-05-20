@@ -37,7 +37,12 @@ SECRET_KEY = 'django-insecure-=c(@)*_b2l^!ov5+1ahfkh+@r*iss7nm9&5y*xwb$o)drkn-um
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+
 ALLOWED_HOSTS = ['*']
+
+
+#CORS ALLOW ORIGIN
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8000','http://localhost:8001']
 
 #MPESA VARIABLES
 MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')

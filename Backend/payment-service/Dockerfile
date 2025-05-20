@@ -1,0 +1,8 @@
+FROM python:3.13-slim
+WORKDIR /app
+COPY payment-service/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY payment-service/ .
+RUN python3 manage.py migrate
+EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "payments.wsgi:application"]

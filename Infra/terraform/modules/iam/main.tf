@@ -35,7 +35,7 @@ resource "aws_iam_role_policy" "github_actions" {
             "ecr:UploadLayerPart",
             "ecr:CompleteLayerUpload"
             ]
-        Resource = ""
+        Resource = "*"
         },
     {
     Effect = "Allow"
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy" "github_actions" {
         "eks:DescribeCluster",
         "eks:ListClusters"
         ]
-        Resource = ""
+        Resource = "*"
         }
         ]
     })

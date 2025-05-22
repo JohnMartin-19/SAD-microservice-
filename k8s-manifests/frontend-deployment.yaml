@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m-farm-product-service
+  name: m-farm-frontend
   namespace: default
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: m-farm-product-service
+      app: m-farm-frontend
   template:
     metadata:
       labels:
-        app: m-farm-product-service
+        app: m-farm-frontend
     spec:
       containers:
-      - name: m-farm-product-service
-        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-product-service:latest
+      - name: m-farm-frontend
+        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-frontend:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         resources:
           requests:
             cpu: "100m"
@@ -27,13 +27,13 @@ spec:
             memory: "512Mi"
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8080
+            path: /
+            port: 80
           initialDelaySeconds: 15
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
-            port: 8080
+            path: /
+            port: 80
           initialDelaySeconds: 5
           periodSeconds: 5

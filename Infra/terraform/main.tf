@@ -45,13 +45,13 @@ module "rds_payment"{
 module "ecr"{
     source= "./modules/ecr"
     project_name = var.project_name
-    repositories = ["Frontend","Backend]
+    repositories = ["frontend","main-app","user-service","payment-service"]
 }
 
 module "elasticache"{
     source = "./modules/elasticache"
     project_name = var.project_name
-    vpc = module.network.vpc_id
+    vpc_id = module.network.vpc_id
     subnet_ids =module.network.private_subnet_ids
 
 }
@@ -59,4 +59,5 @@ module "elasticache"{
 module "iam"{
     source = "./modules/iam"
     project_name = var.project_name
+    
 }

@@ -2,12 +2,10 @@ variable  "aws_region"{
     default = "us-east-1"
 }
 
-variable "project_name"{
-<<<<<<< HEAD
-    default  =  "m-farm"
-=======
-    default  =  "M-FARM"
->>>>>>> 3c341fdfe0d1e13c263e7f5a2d3d601a59494c7e
+variable "project_name" {
+  description = "Project name for resource naming"
+  type        = string
+  default     = "m-farm"
 }
 
 variable "vpc_cidr"{

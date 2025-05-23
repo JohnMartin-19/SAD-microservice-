@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m-farm-product-service
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: m-farm-product-service
+  template:
+    metadata:
+      labels:
+        app: m-farm-product-service
+    spec:
+      containers:
+      - name: m-farm-product-service
+        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-product-service:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5

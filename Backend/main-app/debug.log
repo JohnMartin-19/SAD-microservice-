@@ -1,0 +1,15 @@
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 14, 2025 - 06:38:14
+Django version 5.2, using settings 'm_farm.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+cart data to be sent [{'product_id': 1, 'quantity': 1, 'price': 300}]
+Payment paypal
+Usr details {'name': 'John Mburu', 'email': 'johnnkonge2020@gmail.com', 'phone': '+254 768 171 426'}
+Shipping {'address': 'gilo', 'city': 'naks', 'postal_code': '192'}
+OrderSerializer errors: {'placed_by_id': [ErrorDetail(string='This field is required.', code='required')]}

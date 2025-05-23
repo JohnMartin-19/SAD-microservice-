@@ -1,0 +1,89 @@
+
+name: CI/CD Pipeline for M-FARM
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Configure AWS credentials using OIDC
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::740857577909:role/m-farm-github-actions
+          aws-region: us-east-1
+
+      # Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Build, tag, and push Frontend (m-farm)
+      - name: Build and push Frontend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: m-farm-frontend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd Frontend/m-farm
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # Build, tag, and push Backend services
+      - name: Build and push Backend - product-service
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: m-farm-product-service
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd Backend/main-app
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Build and push Backend - user-service
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: m-farm-user-service
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd Backend/user-service
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Build and push Backend - payment-service
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: m-farm-payment-service
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd Backend/payment-service
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # Set up kubectl for EKS
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      # Update kubeconfig for EKS cluster
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name m-farm-cluster
+
+      # Apply Kubernetes manifests
+      - name: Deploy to EKS
+        run: |
+          kubectl apply -f k8-manifests/

@@ -1,0 +1,147 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import Header from '../components/Header';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+// Center the form vertically and horizontally
+const FormWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Center vertically */
+  min-height: 70vh; /* Full viewport height */
+  padding: 2rem;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 500px; /* Increased width */
+  gap: 1.5rem; /* Slightly larger gap for better spacing */
+  background: #fff;
+  padding: 2.5rem; /* Slightly more padding */
+  border-radius: 10px; /* Slightly larger radius for aesthetics */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Enhanced shadow for depth */
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+`;
+
+const Button = styled.button`
+  padding: 0.75rem;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background-color: #1b5e20;
+  }
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 0.9rem;
+  text-align: center;
+`;
+
+const SuccessMessage = styled.p`
+  color: #2e7d32;
+  font-size: 1rem;
+  text-align: center;
+`;
+
+const Login = () => {
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('http://localhost:8001/accounts/api/v1/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (response.status === 200) {
+        localStorage.setItem('token', data.access);
+        localStorage.setItem('refresh_token',data.refresh)
+        toast.success('Logged in successfully!');
+        setTimeout(() => {
+          navigate('/dashboard');
+          setIsSubmitting(false);
+        }, 2000);
+      } else {
+        setError(data.message || 'Login failed');
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+      <ToastContainer position="top-right" autoClose={3000} />
+      <FormWrapper>
+        <h2>Login to M-Farm</h2>
+        <Form onSubmit={handleSubmit}>
+          <Input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+          />
+          <Input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            disabled={isSubmitting}
+          />
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {success && <SuccessMessage>{success}</SuccessMessage>}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Logging in...' : 'Login'}
+          </Button>
+          <p>
+            Don’t have an account? <Link to="/signup">Sign Up</Link>
+          </p>
+        </Form>
+      </FormWrapper>
+      
+    </>
+  );
+};
+
+export default Login;

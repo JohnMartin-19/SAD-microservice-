@@ -3,7 +3,11 @@ variable  "aws_region"{
 }
 
 variable "project_name"{
+<<<<<<< HEAD
     default  =  "m-farm"
+=======
+    default  =  "M-FARM"
+>>>>>>> 3c341fdfe0d1e13c263e7f5a2d3d601a59494c7e
 }
 
 variable "vpc_cidr"{

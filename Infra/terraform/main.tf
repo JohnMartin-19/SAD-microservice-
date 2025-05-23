@@ -45,13 +45,21 @@ module "rds_payment"{
 module "ecr"{
     source= "./modules/ecr"
     project_name = var.project_name
+<<<<<<< HEAD
     repositories = ["frontend","main-app","user-service","payment-service"]
+=======
+    repositories = ["Frontend","Backend]
+>>>>>>> 3c341fdfe0d1e13c263e7f5a2d3d601a59494c7e
 }
 
 module "elasticache"{
     source = "./modules/elasticache"
     project_name = var.project_name
+<<<<<<< HEAD
     vpc_id = module.network.vpc_id
+=======
+    vpc = module.network.vpc_id
+>>>>>>> 3c341fdfe0d1e13c263e7f5a2d3d601a59494c7e
     subnet_ids =module.network.private_subnet_ids
 
 }
@@ -59,5 +67,8 @@ module "elasticache"{
 module "iam"{
     source = "./modules/iam"
     project_name = var.project_name
+<<<<<<< HEAD
     
+=======
+>>>>>>> 3c341fdfe0d1e13c263e7f5a2d3d601a59494c7e
 }

@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13
 
 WORKDIR /app
 
@@ -11,6 +11,7 @@ RUN apt-get update && \
     libpng-dev \
     zlib1g-dev \
     libffi-dev \
+    python3-dev \
     # Clean up apt caches to keep image size small
     && rm -rf /var/lib/apt/lists/*
 

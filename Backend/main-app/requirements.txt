@@ -160,7 +160,7 @@ jsonschema-specifications==2023.7.1
 jwcrypto==1.5.0
 kafka-python==2.0.2
 kombu==5.3.1
-lxml==4.9.3
+lxml
 markdown-it-py==3.0.0
 MarkupPy==1.14
 MarkupSafe==2.1.3

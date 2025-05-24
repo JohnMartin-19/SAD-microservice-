@@ -46,7 +46,7 @@ cron_descriptor==1.4.0
 cryptography==41.0.3
 cssselect2==0.7.0
 ddsketch==2.0.4
-ddtrace==1.17.3
+ddtrace==1.22.0
 decorator==5.1.1
 defusedxml==0.7.1
 Deprecated==1.2.14

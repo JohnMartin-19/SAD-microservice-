@@ -10,6 +10,7 @@ RUN apt-get update && \
     libfreetype6-dev \
     libpng-dev \
     zlib1g-dev \
+    libffi-dev \
     # Clean up apt caches to keep image size small
     && rm -rf /var/lib/apt/lists/*
 

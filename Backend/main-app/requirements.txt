@@ -296,7 +296,7 @@ virtualenv==20.26.3
 wcwidth==0.2.6
 WeasyPrint==0.42.3
 webencodings==0.5.1
-Werkzeug==2.3.6
+Werkzeug
 whitenoise==6.5.0
 wrapt==1.15.0
 xhtml2pdf==0.2.11

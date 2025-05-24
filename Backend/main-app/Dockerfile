@@ -1,6 +1,6 @@
 FROM python:3.13-slim
 WORKDIR /app
-COPY main-app/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY main-app/ .
 RUN python3 manage.py migrate

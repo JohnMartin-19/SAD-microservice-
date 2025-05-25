@@ -139,7 +139,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 #CORS ALLOW ORIGIN
-CORS_ALLOWED_ORIGINS = ['http://localhost:3002','http://localhost:8002','http://localhost:8000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8002','http://localhost:8001']
 
 
 # Database
@@ -151,7 +151,7 @@ DATABASES = {
         'NAME': os.getenv("DBNAME"),
         'USER': os.getenv("DBUSER"),
         'PASSWORD': os.getenv("DBPASSWORD"),
-        'HOST': '<rds-endpoint>',
+        'HOST': os.getenv("AWS_RDS_ENDPOINT"),
         'PORT': '5432',
     }
 }
@@ -159,7 +159,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust to your Redis server address and database
+        'LOCATION': 'redis://127.0.0.1:6379/1', 
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }

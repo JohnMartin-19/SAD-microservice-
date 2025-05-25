@@ -1,38 +1,44 @@
+# Use python:3.13-slim as the base image
 FROM python:3.13-slim
 
+# Upgrade pip
 RUN pip install --upgrade pip
 
+# Set working directory
 WORKDIR /app
 
+# Copy requirements.txt
 COPY requirements.txt .
 
+# Create appuser
 RUN useradd -m appuser
-USER appuser
 
-RUN apt-get update && \
+# Ensure apt-get directories exist and have correct permissions
+RUN mkdir -p /var/lib/apt/lists/partial && \
+    chown -R root:root /var/lib/apt/lists && \
+    chmod -R 755 /var/lib/apt/lists && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
-    build-essential \
-    libfreetype6-dev \
-    libpng-dev \
-    zlib1g-dev \
-    libffi-dev \
-    python3-dev \
-    curl \
-    # Clean up apt caches
-    && rm -rf /var/lib/apt/lists/*
+        build-essential \
+        libfreetype6-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libffi-dev \
+        python3-dev \
+        curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Rust toolchain and then immediately run pip install in the SAME RUN layer
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    && . "$HOME/.cargo/env" \
-    && pip install --no-cache-dir -r requirements.txt \
-    # Optional: remove rustup installer to keep image size small, after pip install
-    && rm -rf "$HOME/.rustup" "$HOME/.cargo"
+# Install Python dependencies
+RUN pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
-
+# Copy application code
 COPY . .
 
+# Run migrations
 RUN python3 manage.py migrate
 
-EXPOSE 8000
+# Switch to non-root user
+USER appuser
 
+# Command to run the application (modify as needed)
 CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

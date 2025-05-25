@@ -12,17 +12,17 @@ RUN apt-get update && \
     zlib1g-dev \
     libffi-dev \
     python3-dev \
-    # Add Rust toolchain for pydantic_core
     curl \
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-    && . "$HOME/.cargo/env" \
     # Clean up apt caches
-    && rm -rf /var/lib/apt/lists/* \
-    # Optional: remove rustup installer to keep image size small
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust toolchain and then immediately run pip install in the SAME RUN layer
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && . "$HOME/.cargo/env" \
+    && pip install --no-cache-dir -r requirements.txt \
+    # Optional: remove rustup installer to keep image size small, after pip install
     && rm -rf "$HOME/.rustup" "$HOME/.cargo"
 
-
-RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 

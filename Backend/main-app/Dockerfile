@@ -1,8 +1,13 @@
-FROM python:3.13
+FROM python:3.13-slim
+
+RUN pip install --upgrade pip
 
 WORKDIR /app
 
 COPY requirements.txt .
+
+RUN useradd -m appuser
+USER appuser
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \

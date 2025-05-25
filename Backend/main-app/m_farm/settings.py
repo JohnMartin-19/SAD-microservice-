@@ -147,8 +147,12 @@ CORS_ALLOWED_ORIGINS = ['http://localhost:3002','http://localhost:8002','http://
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv("DBNAME"),
+        'USER': os.getenv("DBUSER"),
+        'PASSWORD': os.getenv("DBPASSWORD"),
+        'HOST': '<rds-endpoint>',
+        'PORT': '5432',
     }
 }
 

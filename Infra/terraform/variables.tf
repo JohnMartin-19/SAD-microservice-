@@ -8,6 +8,12 @@ variable "project_name" {
   default     = "m-farm"
 }
 
+variable "repositories" {
+  description = "List of ECR repository names"
+  type        = list(string)
+  default     = ["product-service", "user-service", "payment-service"]
+}
+
 variable "vpc_cidr"{
     default = "10.0.0.0/16"
 }

@@ -1,6 +1,10 @@
 # Use python:3.13-slim as the base image
 FROM python:3.13-slim
 
+#set env variables for non-root user
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+
 # Upgrade pip
 RUN pip install --upgrade pip
 
@@ -34,8 +38,8 @@ RUN pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 # Copy application code
 COPY . .
 
-# Run migrations
-RUN python3 manage.py migrate
+# # Run migrations
+# RUN python3 manage.py migrate
 
 # Switch to non-root user
 USER appuser

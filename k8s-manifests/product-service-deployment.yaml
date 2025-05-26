@@ -13,11 +13,51 @@ spec:
       labels:
         app: m-farm-product-service
     spec:
+     #for database migrations
+      initContainers:
+        - name: migrate-db
+          # Use the same application image for running migrations
+          # This ensures the migration script has access to your Django code and dependencies
+          image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-product-service:latest
+          # The command to run Django migrations
+          command: ["python3", "manage.py", "migrate"]
+          env:
+            # Pass database connection details as environment variables
+            # Use valueFrom.secretKeyRef to securely pull from a Kubernetes Secret
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mfarm-db-secret # Name of the Kubernetes Secret
+                  key: db_name          # Key within the secret for the database name
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mfarm-db-secret
+                  key: db_user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mfarm-db-secret
+                  key: db_password
+            - name: DB_HOST
+              # IMPORTANT: Replace with the actual hostname of your PostgreSQL database (e.g., RDS endpoint)
+              value: "m-farm-product.cq32e02eaaeq.us-east-1.rds.amazonaws.com"
+            - name: DB_PORT
+              value: "5432" # Default PostgreSQL port, adjust if yours is different
+          # Add resources if migrations are resource-intensive, though usually not needed for simple runs
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "100Mi"
+            limits:
+              cpu: "100m"
+              memory: "200Mi"
+
       containers:
       - name: m-farm-product-service
         image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-product-service:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8080 # Ensure your Django app is actually listening on this port
         resources:
           requests:
             cpu: "100m"
@@ -25,6 +65,29 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+        env:
+            # Also pass database connection details to the main application container
+            # It needs these to connect to the database at runtime
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mfarm-db-secret
+                  key: db_name
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mfarm-db-secret
+                  key: db_user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mfarm-db-secret
+                  key: db_password
+            - name: DB_HOST
+              # IMPORTANT: Replace with the actual hostname of your PostgreSQL database (e.g., RDS endpoint)
+              value: "your-rds-endpoint.us-east-1.rds.amazonaws.com"
+            - name: DB_PORT
+              value: "5432" # Default PostgreSQL port, adjust if yours is different
         livenessProbe:
           httpGet:
             path: /health

@@ -11,12 +11,12 @@ module "eks"{
     vpc_id = module.network.vpc_id
 }
 
-module "rds_user"{
+module "rds_accounts"{
     source = "./modules/rds"
-    project_name="${var.project_name}-user"
+    project_name="${var.project_name}-accounts"
     vpc_id = module.network.vpc_id
     subnet_ids = module.network.private_subnet_ids
-    db_name = "userdb"
+    db_name = "accountsdb"
     db_username = var.db_user_username
     db_password = var.db_user_password
 }

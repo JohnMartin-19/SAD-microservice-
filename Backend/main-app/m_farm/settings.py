@@ -148,10 +148,11 @@ CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8002','http://
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DBNAME"),
-        'USER': os.getenv("DBUSER"),
-        'PASSWORD': os.getenv("DBPASSWORD"),
-        'HOST': os.getenv("AWS_RDS_ENDPOINT"),
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        # 'HOST': os.getenv("AWS_RDS_ENDPOINT"),
+        "HOST":os.getenv("DB_HOST"),
         'PORT': '5432',
     }
 }

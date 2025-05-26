@@ -10,6 +10,7 @@ resource "aws_db_instance" "main" {
     vpc_security_group_ids = [aws_security_group.rds.id]
     db_subnet_group_name = aws_db_subnet_group.main.name
     skip_final_snapshot = true
+    publicly_accessible = true
     tags = { Name = "${var.project_name}-rds" }
 }
 
@@ -27,6 +28,14 @@ resource "aws_security_group" "rds" {
         to_port = 5432
         protocol = "tcp"
         cidr_blocks = ["10.0.0.0/16"]
+        }
+
+    ingress {
+        description = "PostgreSQL from local machine"
+        from_port   = 5432
+        to_port     = 5432
+        protocol    = "tcp"
+        cidr_blocks = ["102.68.78.35/32"]
         }
     egress {
         from_port = 0

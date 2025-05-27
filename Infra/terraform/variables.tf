@@ -11,7 +11,12 @@ variable "project_name" {
 variable "repositories" {
   description = "List of ECR repository names"
   type        = list(string)
-  default     = ["product-service", "user-service", "payment-service"]
+  default = [
+    "frontend",
+    "product-service",
+    "user-service",
+    "payment-service",
+  ]
 }
 
 variable "vpc_cidr"{

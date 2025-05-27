@@ -34,7 +34,7 @@ jobs:
       - name: Build and push Frontend
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: m-farm-frontend
+          ECR_REPOSITORY: m-farm-m-farm-frontend
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd Frontend
@@ -45,7 +45,7 @@ jobs:
       - name: Build and push Backend - product-service
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: m-farm-product-service
+          ECR_REPOSITORY: m-farm-m-farm-product-service
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd Backend/main-app
@@ -55,7 +55,7 @@ jobs:
       - name: Build and push Backend - user-service
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: m-farm-user-service
+          ECR_REPOSITORY: m-farm-m-farm-user-service
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd Backend/user-service
@@ -65,7 +65,7 @@ jobs:
       - name: Build and push Backend - payment-service
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: m-farm-payment-service
+          ECR_REPOSITORY: m-farm-m-farm-payment-service
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd Backend/payment-service

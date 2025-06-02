@@ -114,4 +114,6 @@ jobs:
       # Apply Kubernetes manifests
       - name: Deploy to EKS
         run: |
+          rm -rf ~/.kube/cache ~/.kube/http-cache
+          kubectl config current-context
           kubectl apply -f k8s-manifests/ --validate=false

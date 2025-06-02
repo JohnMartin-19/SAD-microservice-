@@ -37,7 +37,7 @@ const Home = () => {
         className="d-flex align-items-center justify-content-center text-white"
         style={{
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1504279573657-236ab806dbfa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80'), linear-gradient(to bottom, rgb(46, 125, 50), rgba(244, 247, 244, 0.5))",
+            "url('../statics/cornn.mp4'), linear-gradient(to bottom, rgb(46, 125, 50), rgba(244, 247, 244, 0.5))",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           minHeight: '70vh',

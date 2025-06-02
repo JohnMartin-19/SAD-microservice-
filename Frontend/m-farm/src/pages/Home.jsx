@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
+import corn from '../assets/cornn.mp4'
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -34,19 +34,49 @@ const Home = () => {
 
       {/* Hero Section */}
       <motion.section
-        className="d-flex align-items-center justify-content-center text-white"
+      className="d-flex align-items-center justify-content-center text-white position-relative"
+      style={{
+        minHeight: '90vh',
+        overflow: 'hidden', // Ensure video doesn't overflow
+      }}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.3 }}
+      variants={staggerChildren}
+    >
+      {/* Video Background */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline // Improves mobile compatibility
         style={{
-          backgroundImage:
-            "url('../statics/cornn.mp4'), linear-gradient(to bottom, rgb(46, 125, 50), rgba(244, 247, 244, 0.5))",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          minHeight: '70vh',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover', // Ensures video covers the section
+          zIndex: -2, // Place video behind content
         }}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-        variants={staggerChildren}
       >
+        <source src={corn} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      {/* Gradient Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          
+          zIndex: -1, // Place gradient above video but below content
+        }}
+      ></div>
+      
         <motion.div
           className="text-center px-3"
           style={{ background: 'transparent' }}

@@ -1,3 +1,4 @@
 Infra/terraform/.terraform/**
 Infra/terraform/terraform.tfstate
 Infra/terraform/terraform.tfstate.backup
+Frontend/m-farm/src/statics/cornn.mp4

@@ -79,9 +79,37 @@ jobs:
           version: 'latest'
 
       # Update kubeconfig for EKS cluster
+      # Update kubeconfig for EKS cluster (with debug)
       - name: Configure kubectl
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name m-farm-cluster
+          echo "Attempting aws eks update-kubeconfig..."
+          # Run with debug output for aws cli
+          aws eks update-kubeconfig --region us-east-1 --name m-farm-cluster --debug 2>&1 | tee aws-kubeconfig-debug.log
+          echo "aws eks update-kubeconfig command finished."
+          cat aws-kubeconfig-debug.log
+
+          echo "--- Kubeconfig Contexts (after update-kubeconfig) ---"
+          kubectl config get-contexts 2>&1 | tee kubectl-contexts.log
+          cat kubectl-contexts.log
+
+          echo "--- Kubeconfig View (after update-kubeconfig) ---"
+          kubectl config view 2>&1 | tee kubectl-view.log
+          cat kubectl-view.log
+
+          echo "--- Cluster Info (testing API connectivity) ---"
+          # This command might fail, but its output is crucial
+          kubectl cluster-info 2>&1 | tee kubectl-cluster-info.log
+          cat kubectl-cluster-info.log
+
+          echo "--- Auth Can I (testing specific permissions) ---"
+          # These commands will directly tell us if the assumed role has permissions
+          kubectl auth can-i get pods --namespace default 2>&1 | tee kubectl-can-i-pods.log
+          cat kubectl-can-i-pods.log
+          kubectl auth can-i create deployments --namespace default 2>&1 | tee kubectl-can-i-deployments.log
+          cat kubectl-can-i-deployments.log
+
+          echo "--- Attempting kubectl apply in next step ---"
+          # kubectl apply command is in the next step
 
       # Apply Kubernetes manifests
       - name: Deploy to EKS

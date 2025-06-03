@@ -98,7 +98,7 @@ const Home = () => {
           >
             <motion.div variants={scaleUp}>
               <Link to="/marketplace">
-                <button className="btn btn-success btn-lg px-4 py-2 shadow">
+                <button className="btn btn-successs btn-lg px-4 py-2 shadow" style={{backgroundColor:" #2e7d32", color:"white"}}>
                   Buy Fresh Crops
                 </button>
               </Link>
@@ -140,7 +140,7 @@ const Home = () => {
                   <div className="card-body text-center">
                     <h3 className="card-title fw-semibold text-success mb-3">{item.title}</h3>
                     <p className="card-text text-muted">{item.text}</p>
-                    <Link to={item.link} className="btn btn-link text-success fw-semibold">
+                    <Link to={item.link} className="btn btn-success text fw-semibold">
                       {item.cta}
                     </Link>
                   </div>

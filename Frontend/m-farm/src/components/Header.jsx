@@ -3,8 +3,83 @@ import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown } from 'react-bootstrap';
+import { CiClock2 } from 'react-icons/ci';
 
-// Styled components
+// Styled components for top bar
+const TopBar = styled.div`
+  background-color: #f5f5f5;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  color: #4b5563;
+  max-width: 100%;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+`;
+
+const TopBarLink = styled.a`
+  display: flex;
+  align-items: center;
+  color: #4b5563;
+  text-decoration: none;
+
+  &:hover {
+    color:  #2e7d32;
+  }
+`;
+
+const TopBarSpan = styled.span`
+  display: flex;
+  align-items: center;
+  color: #4b5563;
+`;
+
+const Gab = styled(TopBarSpan)`
+  margin-left: 15rem;
+
+  @media (max-width: 768px) {
+    margin-left: 0;
+  }
+`;
+
+const Gab1 = styled(TopBarLink)`
+  margin-right: 15rem;
+
+  @media (max-width: 768px) {
+    margin-right: 0;
+  }
+`;
+
+const Gab2 = styled(TopBarSpan)`
+  margin-right: 5rem;
+
+  @media (max-width: 768px) {
+    margin-right: 0;
+  }
+`;
+
+const TopBarIcon = styled.svg`
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.5rem;
+  fill:  #2e7d32;
+`;
+
+const CiClockIcon = styled(CiClock2)`
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.5rem;
+  fill:  #2e7d32;
+`;
+
+// Existing styled components for header
 const HeaderWrapper = styled.header`
   display: flex;
   justify-content: space-between;
@@ -114,7 +189,6 @@ const PlaceholderImage = styled.div`
   }
 `;
 
-// Styled Dropdown Menu
 const StyledDropdownMenu = styled(Dropdown.Menu)`
   background-color: #2e7d32 !important;
   border: none;
@@ -125,7 +199,7 @@ const StyledDropdownMenu = styled(Dropdown.Menu)`
     padding: 0.5rem 1rem;
 
     &:hover {
-      background-color: #1b5e20; /* Darker green on hover */
+      background-color: #1b5e20;
       color: #e0e0e0;
     }
 
@@ -191,6 +265,24 @@ const Header = ({ isOpen, toggleMenu }) => {
 
   return (
     <>
+      <TopBar>
+        <Gab>
+          <TopBarIcon viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+          </TopBarIcon>
+          Nairobi,Kenya
+        </Gab>
+        <Gab1 href="https://www.mfarm.co.ke">
+          <TopBarIcon viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </TopBarIcon>
+          www.mfarm.co.ke
+        </Gab1>
+        <Gab2>
+          <CiClockIcon />
+          Mon - Saturday, 8am - 8pm
+        </Gab2>
+      </TopBar>
       <HeaderWrapper>
         <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
           <h1>M-Farm</h1>

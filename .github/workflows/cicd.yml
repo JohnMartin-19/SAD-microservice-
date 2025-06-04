@@ -82,6 +82,7 @@ jobs:
       # Update kubeconfig for EKS cluster (with debug)
       - name: Configure kubectl
         run: |
+          kubectl version --client
           echo "Attempting aws eks update-kubeconfig..."
           # Run with debug output for aws cli
           aws eks update-kubeconfig --region us-east-1 --name m-farm-cluster --debug 2>&1 | tee aws-kubeconfig-debug.log

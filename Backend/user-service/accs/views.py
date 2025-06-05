@@ -11,11 +11,30 @@ import redis
 import os
 
 
+# user-service/accs/views.py
+import redis
+import os
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import status
+from rest_framework.response import Response
+import logging
+from datetime import datetime, timedelta
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
+        if response.status_code != status.HTTP_200_OK:
+            return response
+
         access_token = response.data['access']
         user = request.user
+
+        # Calculate expiration time
+        access_token_lifetime = settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=60))
+        expires = datetime.utcnow() + access_token_lifetime
 
         # Connect to Redis
         redis_client = redis.Redis(
@@ -24,14 +43,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             decode_responses=True
         )
 
-        # Store token metadata (e.g., user ID, expiration)
+        # Store token metadata
         token_key = f"token:{access_token}"
         redis_client.hset(token_key, mapping={
             'user_id': str(user.id),
             'username': user.username,
-            'expires': str(response.data['access_token_lifetime'])
+            'expires': str(int(expires.timestamp()))
         })
-        redis_client.expire(token_key, 3600)  # Match ACCESS_TOKEN_LIFETIME (60 minutes)
+        redis_client.expire(token_key, int(access_token_lifetime.total_seconds()))
 
         logger.info(f"Stored token {access_token} for user {user.username} in Redis")
         return response

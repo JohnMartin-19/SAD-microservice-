@@ -12,39 +12,18 @@ from django.conf import settings
 #         fields = ['username', 'email']
 
 class ProductSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
-
     class Meta:
         model = Product
-        fields = ['id', 'name', 'user', 'price', 'description', 'quantity', 'product_location', 'image']
+        fields = ['id', 'name', 'description', 'price', 'quantity', 'product_location', 'image', 'user']
         read_only_fields = ['user']
 
-    # def get_user(self, obj):
-    #     try:
-    #         # Check if request exists in context
-    #         if 'request' not in self.context:
-    #             return {'username': 'Error', 'email': 'No request context'}
-            
-    #         auth_header = self.context['request'].META.get('HTTP_AUTHORIZATION', '')
-    #         token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else ''
-            
-    #         if not token:
-    #             return {'username': 'Error', 'email': 'No token provided'}
-
-    #         response = requests.get(
-    #             f"http://localhost:8001/accounts/api/v1/users/{obj.user_id}/",
-    #             headers={'Authorization': f"Bearer {token}"}
-    #         )
-    #         if response.status_code == 200:
-    #             return response.json()
-    #         return {'username': 'Unknown', 'email': f"User service error: {response.status_code}"}
-    #     except (requests.RequestException, IndexError):
-    #         return {'username': 'Error', 'email': 'Failed to fetch user'}
-
     def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user.id
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            validated_data['user'] = request.user.id  # Set user to user ID
+        else:
+            raise serializers.ValidationError("Authenticated user is required.")
         return super().create(validated_data)
-
 class MyProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product

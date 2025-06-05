@@ -58,7 +58,7 @@ class ProductListCreateView(APIView):
         logger.info(f"Request user: {request.user}")
 
         serializer = ProductSerializer(data=request.data, context={'request': request})
-        print("My User",request.data.user)
+        print("My User",request.user)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -131,7 +131,7 @@ class LoggedInUserOrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        orders = Order.objects.filter(productorder__product__user=request.user)
+        orders = Order.objects.filter(productorder__product__user=request.user.id)
         serializer = MyOrderSerializer(orders, many=True)
         return Response(serializer.data)
 

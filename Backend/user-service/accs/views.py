@@ -5,8 +5,36 @@ from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy
 from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
+import redis
+import os
 
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        access_token = response.data['access']
+        user = request.user
+
+        # Connect to Redis
+        redis_client = redis.Redis(
+            host=os.getenv('REDIS_HOST', 'localhost'),
+            port=int(os.getenv('REDIS_PORT', 6379)),
+            decode_responses=True
+        )
+
+        # Store token metadata (e.g., user ID, expiration)
+        token_key = f"token:{access_token}"
+        redis_client.hset(token_key, mapping={
+            'user_id': str(user.id),
+            'username': user.username,
+            'expires': str(response.data['access_token_lifetime'])
+        })
+        redis_client.expire(token_key, 3600)  # Match ACCESS_TOKEN_LIFETIME (60 minutes)
+
+        logger.info(f"Stored token {access_token} for user {user.username} in Redis")
+        return response
 class RegisterAPIView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)

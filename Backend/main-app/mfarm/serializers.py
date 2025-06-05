@@ -19,30 +19,30 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'user', 'price', 'description', 'quantity', 'product_location', 'image']
         read_only_fields = ['user']
 
-    def get_user(self, obj):
-        try:
-            # Check if request exists in context
-            if 'request' not in self.context:
-                return {'username': 'Error', 'email': 'No request context'}
+    # def get_user(self, obj):
+    #     try:
+    #         # Check if request exists in context
+    #         if 'request' not in self.context:
+    #             return {'username': 'Error', 'email': 'No request context'}
             
-            auth_header = self.context['request'].META.get('HTTP_AUTHORIZATION', '')
-            token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else ''
+    #         auth_header = self.context['request'].META.get('HTTP_AUTHORIZATION', '')
+    #         token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else ''
             
-            if not token:
-                return {'username': 'Error', 'email': 'No token provided'}
+    #         if not token:
+    #             return {'username': 'Error', 'email': 'No token provided'}
 
-            response = requests.get(
-                f"http://localhost:8001/accounts/api/v1/users/{obj.user_id}/",
-                headers={'Authorization': f"Bearer {token}"}
-            )
-            if response.status_code == 200:
-                return response.json()
-            return {'username': 'Unknown', 'email': f"User service error: {response.status_code}"}
-        except (requests.RequestException, IndexError):
-            return {'username': 'Error', 'email': 'Failed to fetch user'}
+    #         response = requests.get(
+    #             f"http://localhost:8001/accounts/api/v1/users/{obj.user_id}/",
+    #             headers={'Authorization': f"Bearer {token}"}
+    #         )
+    #         if response.status_code == 200:
+    #             return response.json()
+    #         return {'username': 'Unknown', 'email': f"User service error: {response.status_code}"}
+    #     except (requests.RequestException, IndexError):
+    #         return {'username': 'Error', 'email': 'Failed to fetch user'}
 
     def create(self, validated_data):
-        validated_data['user_id'] = self.context['request'].user.id
+        validated_data['user'] = self.context['request'].user.id
         return super().create(validated_data)
 
 class MyProductSerializer(serializers.ModelSerializer):

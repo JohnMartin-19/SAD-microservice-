@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = 'django-insecure-=c(@)*_b2l^!ov5+1ahfkh+@r*iss7nm9&5y*xwb$o)drkn-um'
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -69,7 +69,7 @@ REST_FRAMEWORK = {
         'm_farm.auth.RedisTokenAuthentication',  # Verify this path
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Consider IsAuthenticated for protected endpoints
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # Consider IsAuthenticated for protected endpoints
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -119,11 +119,13 @@ CACHES = {
     }
 }
 
+STATICFILES_DIRS = [BASE_DIR / "static"]  
+STATIC_ROOT = BASE_DIR / "staticfiles"    
+# Media files (product-uploaded content)
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / "static/uploads"
+MEDIA_ROOT = BASE_DIR / "media"  
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

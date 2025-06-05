@@ -77,31 +77,31 @@ class RegisterAPIView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-class LoginAPIView(APIView):
-    def get(self, request):
-        return Response({
-            'message': 'Use POST to login with username and password.',
-            'fields': ['username', 'password'],
-        })
+# class LoginAPIView(APIView):
+#     def get(self, request):
+#         return Response({
+#             'message': 'Use POST to login with username and password.',
+#             'fields': ['username', 'password'],
+#         })
 
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                'status': 'success',
-                'message': 'Login successful!',
-                'token': token.key,
-                'user': UserSerializer(user).data,
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({
-                'status': 'error',
-                'message': 'Invalid username or password.',
-            }, status=status.HTTP_400_BAD_REQUEST)
+#     def post(self, request):
+#         username = request.data.get('username')
+#         password = request.data.get('password')
+#         user = authenticate(request, username=username, password=password)
+#         if user is not None:
+#             login(request, user)
+#             token, created = Token.objects.get_or_create(user=user)
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Login successful!',
+#                 'token': token.key,
+#                 'user': UserSerializer(user).data,
+#             }, status=status.HTTP_200_OK)
+#         else:
+#             return Response({
+#                 'status': 'error',
+#                 'message': 'Invalid username or password.',
+#             }, status=status.HTTP_400_BAD_REQUEST)
 class LogoutAPIView(APIView):
     def post(self, request):
         try:

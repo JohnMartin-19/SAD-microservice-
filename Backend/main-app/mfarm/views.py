@@ -23,6 +23,7 @@ from drf_spectacular.utils import extend_schema
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 import uuid
+from rest_framework.permissions import IsAuthenticated,IsAuthenticatedOrReadOnly
 import datetime
 import base64
 from io import BytesIO
@@ -38,8 +39,7 @@ logger = logging.getLogger(__name__)
 #API ENDPOINTS FOR PRODUCT
 
 class ProductListCreateView(APIView):
-    permission_classes = [AllowAny]  # Allow unauthenticated GET, authenticated POST
-
+   
     def get(self, request):
         """
         List all products.
@@ -49,7 +49,7 @@ class ProductListCreateView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
    
-    
+    permission_classes = [IsAuthenticated] 
     def post(self, request):
         """
         Create a new product.

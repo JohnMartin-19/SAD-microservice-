@@ -66,11 +66,19 @@ const Marketplace = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
+      let token = localStorage.getItem('token')
       try {
         const url = categoryFilter
           ? `http://localhost:8000/mfarm/api/v1/products/?category=${categoryFilter}`
           : 'http://localhost:8000/mfarm/api/v1/products/';
-        const response = await fetch(url);
+          const headers = {
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+          };
+          // if (token) {
+          //   headers['Authorization'] = `Bearer ${token}`;
+          // }
+        const response = await fetch(url,{ headers: headers });
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }

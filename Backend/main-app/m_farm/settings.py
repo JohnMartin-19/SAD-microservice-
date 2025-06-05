@@ -132,6 +132,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -139,7 +141,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 #CORS ALLOW ORIGIN
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8002','http://localhost:8001']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8000','http://localhost:8001']
 
 
 # Database

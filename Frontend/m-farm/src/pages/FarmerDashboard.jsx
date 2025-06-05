@@ -146,18 +146,15 @@ const FarmerDashboard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let token = localStorage.getItem('token');
-    console.log('My token',token)
+    const token = localStorage.getItem('token');
+    console.log('Token:', token);
     if (!token) {
       toast.error('No token found. Please log in again.');
-      setTimeout(()=>{
-        navigate('/login');
-      },3000)
+      setTimeout(() => navigate('/login'), 3000);
       return;
     }
-
+  
     const formDataToSend = new FormData();
-    formDataToSend.append('user',token)
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('price', formData.price);
@@ -166,36 +163,31 @@ const FarmerDashboard = () => {
     if (formData.image) {
       formDataToSend.append('image', formData.image);
     }
-
-    // Log FormData contents
-    for (const [key, value] of formDataToSend.entries()) {
-      console.log(`${key}:`, value);
-    }
-    
+  
     try {
-      token = localStorage.getItem('token')
-      console.log('tokeniiiii',token)
       let response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
         method: 'POST',
-        
         headers: {
           'Authorization': `Bearer ${token}`,
         },
         body: formDataToSend,
       });
-
+  
       if (response.status === 401) {
-        token = await refreshToken();
-       
-        response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          body: formDataToSend,
-        });
+        const newToken = await refreshToken();
+        if (newToken) {
+          response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${newToken}`,
+            },
+            body: formDataToSend,
+          });
+        } else {
+          throw new Error('Token refresh failed');
+        }
       }
-
+  
       if (response.ok) {
         const newProduct = await response.json();
         setListings([...listings, newProduct]);

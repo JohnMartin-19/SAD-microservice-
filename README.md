@@ -1,2 +1,1 @@
-# SAD-microservice-
-A web application that will provide access to e-markets from farmers across the country. This will incorporate several technologies including ReactJS,Django,DRF,PostgreSQL, AWS Elastic Beanstalk,S3,Lambda, Docker, Kubernetes, MySQL
+A web application that will provide access to e-markets from farmers across the country. Using AWS to deploy the microservice application,I have leveraged several technologies as well. Using Terraform to procure Cloud Infra for the app, and running Kubernetes clusters using manifests.Github actions for CI/CD pipeline to automate deployment to AWS

@@ -26,7 +26,7 @@ class Product(models.Model):
     quantity = models.PositiveIntegerField(null=True,blank=True)
     product_location = models.CharField(blank=True, null=True, max_length=150)
     price = models.PositiveIntegerField(null=True, blank=True)
-    user = models.CharField(null=True, blank=True)
+    user_id = models.CharField(null=True, blank=True,db_index=True)
     category = models.CharField(
         max_length=50,
         choices=FARM_CATEGORIES,

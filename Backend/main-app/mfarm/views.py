@@ -60,7 +60,7 @@ class ProductListCreateView(APIView):
         serializer = ProductSerializer(data=request.data, context={'request': request})
         print("My User",request.user)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user_id = self.request.user.id, user_username = self.request.user.username)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class ProductRetrieveUpdateDeleteView(APIView):
@@ -130,10 +130,17 @@ class LoggedInUserProductListView(APIView):
 class LoggedInUserOrderListView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        orders = Order.objects.filter(productorder__product__user=request.user.id)
-        serializer = MyOrderSerializer(orders, many=True)
-        return Response(serializer.data)
+    serializer_class = MyProductSerializer 
+    # Only authenticated users can see their products
+
+    def get(self,request):
+        """
+        Returns products only for the authenticated user.
+        """
+        user_id = self.request.user.id
+        logger.info(f"Fetching products for user ID: {user_id}")
+        return Product.objects.filter(user_id=user_id)
+
 
 class RevenueView(APIView):
     permission_classes = [IsAuthenticated]

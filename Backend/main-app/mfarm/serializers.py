@@ -12,23 +12,29 @@ from django.conf import settings
 #         fields = ['username', 'email']
 
 class ProductSerializer(serializers.ModelSerializer):
+    
+    seller = serializers.CharField(source='user_username', read_only=True)
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'quantity', 'product_location', 'image', 'user']
-        read_only_fields = ['user']
+        fields = ['id', 'name', 'description', 'price', 'quantity', 'product_location', 'image',"seller",]
+        
 
-    def create(self, validated_data):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user') and request.user.is_authenticated:
-            validated_data['user'] = request.user.id  # Set user to user ID
-        else:
-            raise serializers.ValidationError("Authenticated user is required.")
-        return super().create(validated_data)
+    # def create(self, validated_data):
+    #     user_id = self.context['request'].user.id
+    #     user_username = self.context['request'].user.username
+    #     request = self.context.get('request')
+    #     if request and hasattr(request, 'user') and request.user.is_authenticated:
+    #         validated_data['user'] = request.user.id  # Set user to user ID
+    #     else:
+    #         raise serializers.ValidationError("Authenticated user is required.")
+    #     return super().create(validated_data)
 class MyProductSerializer(serializers.ModelSerializer):
+    
+    seller = serializers.CharField(source='user_username', read_only=True)
     class Meta:
         model = Product
-        fields = ['name', 'price','user','description', 'quantity', 'product_location', 'image']
-        read_only_fields = ['id', 'user_username']
+        fields = ['name', 'price','description', 'quantity', 'product_location', 'image','seller']
+     
 
     def create(self, validated_data):
         # Automatically set user_username from the authenticated user

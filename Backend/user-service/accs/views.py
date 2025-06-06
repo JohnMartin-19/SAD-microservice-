@@ -25,16 +25,39 @@ logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code != status.HTTP_200_OK:
-            return response
+        # The serializer handles validation and authentication
+        serializer = self.get_serializer(data=request.data)
 
-        access_token = response.data['access']
-        user = request.user
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            logger.error(f"Token validation failed: {e}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Access the authenticated user object directly from the serializer
+        # Simple JWT's TokenObtainPairSerializer populates `self.user` on successful validation.
+        authenticated_user = serializer.user
+
+        # --- Debugging authenticated_user ---
+        logger.info(f"--- Debugging Authenticated User in CustomTokenObtainPairView ---")
+        logger.info(f"Authenticated user object: {authenticated_user}")
+        logger.info(f"Is user authenticated? {authenticated_user.is_authenticated}")
+        logger.info(f"User ID from authenticated_user: '{getattr(authenticated_user, 'id', 'N/A')}'")
+        logger.info(f"User username from authenticated_user: '{getattr(authenticated_user, 'username', 'N/A')}'")
+        logger.info(f"User PK from authenticated_user: '{getattr(authenticated_user, 'pk', 'N/A')}'")
+        # --- End Debugging ---
+
+
+        if not authenticated_user or not authenticated_user.is_authenticated:
+            logger.error("Authenticated user object is invalid or not authenticated after serializer validation.")
+            return Response({'error': 'Authentication failed unexpectedly'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        access_token_data = serializer.validated_data['access']
+        refresh_token_data = serializer.validated_data['refresh']
 
         # Calculate expiration time
         access_token_lifetime = settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=60))
-        expires = datetime.utcnow() + access_token_lifetime
+        expires_at_utc = datetime.utcnow() + access_token_lifetime # JWT exp is typically UTC timestamp
 
         # Connect to Redis
         redis_client = redis.Redis(
@@ -44,16 +67,21 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         )
 
         # Store token metadata
-        token_key = f"token:{access_token}"
+        token_key = f"token:{access_token_data}" # Use the actual access token string
         redis_client.hset(token_key, mapping={
-            'user_id': str(user.id),
-            'username': user.username,
-            'expires': str(int(expires.timestamp()))
+            'user_id': str(authenticated_user.id),
+            'username': authenticated_user.username,
+            'expires': str(int(expires_at_utc.timestamp())) # Convert to timestamp string
         })
         redis_client.expire(token_key, int(access_token_lifetime.total_seconds()))
 
-        logger.info(f"Stored token {access_token} for user {user.username} in Redis")
-        return response
+        logger.info(f"Stored token {access_token_data} for user {authenticated_user.username} (ID: {authenticated_user.id}) in Redis")
+
+        return Response({
+            'access': access_token_data,
+            'refresh': refresh_token_data
+        }, status=status.HTTP_200_OK)
+
 class RegisterAPIView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)

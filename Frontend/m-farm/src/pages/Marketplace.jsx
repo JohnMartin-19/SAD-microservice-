@@ -88,7 +88,7 @@ const Marketplace = () => {
           id: product.id || `temp-id-${index}`,
           title: product.name || 'Untitled',
           price: product.price ? parseFloat(product.price) : (product.quantity ? parseFloat(product.quantity) * 50 : 500),
-          seller: product.user?.username || 'Unknown',
+          seller: product.seller || 'Unknown',
           location: product.product_location || 'Unknown Location',
           image: product.image ? `http://localhost:8000${product.image}` : 'https://via.placeholder.com/200',
           category: product.category || 'Uncategorized',

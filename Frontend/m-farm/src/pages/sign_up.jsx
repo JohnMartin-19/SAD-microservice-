@@ -107,7 +107,7 @@ const Signup = () => {
         console.log('Stored tokens:', data.tokens); 
         toast.success('Account created successfully!');
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/login');
         }, 2000);
       } else {
         console.error('Signup error:', data);

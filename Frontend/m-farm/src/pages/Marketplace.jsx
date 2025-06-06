@@ -195,7 +195,7 @@ const Marketplace = () => {
               className="form-select shadow-sm"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              style={{ maxWidth: '200px' }}
+              style={{ maxWidth: '150px' }}
             >
               {categories.map(cat => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>

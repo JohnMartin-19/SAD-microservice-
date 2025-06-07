@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react'; // Added useMemo
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -21,10 +21,32 @@ const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { cart = [], totalAmount = 0 } = location.state || {};
+  // Initialize cart and totalAmount directly at component mount using useMemo
+  // This calculates the initial state once, either from location.state or sessionStorage,
+  // preventing re-renders from state updates inside useEffect.
+  const initialCart = useMemo(() => {
+    if (location.state && location.state.cart && location.state.cart.length) {
+      return location.state.cart;
+    }
+    const savedCart = sessionStorage.getItem('cart');
+    if (savedCart) {
+      // Ensure quantities are parsed as numbers if coming from sessionStorage
+      return JSON.parse(savedCart).map(item => ({
+        ...item,
+        quantity: parseInt(item.quantity, 10)
+      }));
+    }
+    return []; // Default to an empty array if no cart data is found
+  }, [location.state]); // Dependency array: only re-calculate if location.state changes
 
-  const [cartState, setCart] = useState(cart);
-  const [totalAmountState, setTotalAmount] = useState(totalAmount);
+  const initialTotalAmount = useMemo(() => {
+    return initialCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  }, [initialCart]); // Dependency array: re-calculate if initialCart changes
+
+  // Use the memoized initial values for your state
+  const [cartState, setCart] = useState(initialCart);
+  const [totalAmountState, setTotalAmount] = useState(initialTotalAmount);
+
 
   useEffect(() => {
     console.log('Checkout loaded. Location state:', location.state);
@@ -37,28 +59,15 @@ const Checkout = () => {
     }
     console.log('Token found:', token);
 
-    // Load cart from sessionStorage if location.state is empty
-    let loadedCart = cart;
-    if (!cart.length) {
-      const savedCart = sessionStorage.getItem('cart');
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        loadedCart = parsedCart.map(item => ({
-          ...item,
-          quantity: parseInt(item.quantity, 10)
-        }));
-        setCart(loadedCart);
-        setTotalAmount(loadedCart.reduce((sum, item) => sum + item.price * item.quantity, 0));
-      }
-    }
-
-    // Redirect if cart is empty
-    if (!loadedCart.length) {
+    // Redirect if cart is empty after initial load (based on cartState)
+    // This effect runs after the component mounts and initial state is set
+    if (!cartState.length) { // Now safely checking cartState, which is initialized via useMemo
       console.log('Cart is empty, redirecting to marketplace');
       toast.error('Your cart is empty. Add products to proceed.');
       navigate('/marketplace');
     }
-  }, [navigate, cart, location.state]);
+  }, [navigate, cartState, location.state]); // cartState is now a dependency to react to subsequent changes
+
 
   useEffect(() => {
     console.log('Modal state:', showMpesaModal, 'Payment method:', paymentMethod);
@@ -122,11 +131,11 @@ const Checkout = () => {
     const payload = {
       phone_number: mpesaPhone,
       amount: totalAmountState,
-      order_id: receiptData?.order_id || 0,
+      // order_id: receiptData?.order_id || 0, // This might not be available yet if payment is before checkout
     };
 
     try {
-      const response = await fetch('http://localhost:8000/mfarm/api/v1/mpesa/stk-push/', {
+      const response = await fetch('http://localhost:8002/payments/api/v1/mpesa/stk-push/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -142,7 +151,7 @@ const Checkout = () => {
         setShowMpesaModal(false);
         setMpesaPhone('');
       } else {
-        toast.error(responseData.error || 'Failed to initiate STK Push.');
+        toast.error(responseData.errorMessage || responseData.error || 'Failed to initiate STK Push.');
       }
     } catch (error) {
       console.error('Error initiating STK Push:', error);
@@ -163,6 +172,11 @@ const Checkout = () => {
       toast.error('Please fill in all required fields.');
       return;
     }
+    if (cartState.length === 0) {
+        toast.error('Your cart is empty. Cannot place an order.');
+        return;
+    }
+
 
     const token = localStorage.getItem('token');
     const payload = {
@@ -467,7 +481,9 @@ const Checkout = () => {
                           className="form-check-input"
                           onChange={handlePaymentMethodChange}
                           checked={paymentMethod === method.id}
-                          disabled={paymentMethod && paymentMethod !== method.id && paymentMethod === 'mpesa'}
+                          // This disabled logic seems a bit off, consider if it's truly needed
+                          // If you select M-Pesa, others are disabled. But if you select something else, M-Pesa is not disabled.
+                          // disabled={paymentMethod && paymentMethod !== method.id && paymentMethod === 'mpesa'}
                         />
                         <label htmlFor={method.id} className="form-check-label">
                           {method.label}
@@ -505,74 +521,47 @@ const Checkout = () => {
           </>
         )}
 
-        {/* Bootstrap M-Pesa Modal */}
+        {/* Bootstrap M-Pesa Modal (you'll need to ensure this is closed properly
+           and includes your styling/logic for showing/hiding it. I'm assuming
+           it's defined outside this snippet but within your return statement.)
+        */}
         {showMpesaModal && (
           <motion.div
-            className="modal fade show d-block"
-            style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+            className="modal"
             initial="hidden"
             animate="visible"
             exit="exit"
             variants={modalVariants}
+            style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} // Simple overlay style
           >
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">M-Pesa Payment</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => {
-                      console.log('Closing M-Pesa modal');
-                      setShowMpesaModal(false);
-                      setPaymentMethod('');
-                      setMpesaPhone('');
-                    }}
-                  ></button>
+                  <h5 className="modal-title">M-Pesa STK Push</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowMpesaModal(false)}></button>
                 </div>
                 <div className="modal-body">
-                  <div className="mb-3">
-                    <label htmlFor="mpesaPhone" className="form-label">
-                      Enter Phone Number (+2547XXXXXXXX)
-                    </label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      id="mpesaPhone"
-                      value={mpesaPhone}
-                      onChange={(e) => setMpesaPhone(e.target.value)}
-                      placeholder="+2547XXXXXXXX"
-                      required
-                    />
-                  </div>
+                  <p>Enter your M-Pesa phone number to initiate the STK Push.</p>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    placeholder="+2547XXXXXXXX"
+                    value={mpesaPhone}
+                    onChange={(e) => setMpesaPhone(e.target.value)}
+                  />
+                  <small className="text-muted">Ensure your phone is unlocked and ready for the M-Pesa prompt.</small>
                 </div>
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      console.log('Closing M-Pesa modal');
-                      setShowMpesaModal(false);
-                      setPaymentMethod('');
-                      setMpesaPhone('');
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    onClick={handleMpesaSubmit}
-                  >
-                    Initiate STK Push
-                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowMpesaModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-success" onClick={handleMpesaSubmit}>Initiate Payment</button>
                 </div>
               </div>
             </div>
           </motion.div>
         )}
-      </div>
 
+      </div>
+      <Footer />
     </div>
   );
 };

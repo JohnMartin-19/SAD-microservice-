@@ -1,5 +1,5 @@
 # M-FARM
-A web application that will provide access to e-markets from farmers across the country. Using AWS to deploy the microservice application,I have leveraged several technologies as well. Using Terraform to procure Cloud Infra for the app, and running Kubernetes clusters using manifests.Github actions for CI/CD pipeline to automate deployment to AWS
+A web application that will provide access to e-markets,experts and customers to the local farmers across the country. Using AWS to deploy the microservice application,I have leveraged several technologies as well. Using Terraform to procure Cloud Infra for the app, and running Kubernetes clusters using manifests.Github actions for CI/CD pipeline to automate deployment to AWS
 
 # Key Architectural Patterns
 Microservices: Independent services (user-service, product-service,payment-service) with separate codebases and databases.

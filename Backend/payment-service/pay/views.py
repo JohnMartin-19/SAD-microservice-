@@ -19,7 +19,7 @@ from rest_framework import status
 #### MPESA STK
 class STKPushAPIView(APIView):
     ############GENERATES AND RETURNS ACCESS TOKEN
-    def get(request):
+    def get(self,request):
         consumer_key = settings.MPESA_CONSUMER_KEY
         consumer_secret = settings.MPESA_CONSUMER_SECRET
 
@@ -73,6 +73,7 @@ class STKPushAPIView(APIView):
             web_name = "M-FARM"
             stk_password = base64.b64encode((business_short_code + pass_key + timestamp).encode('utf-8')).decode('utf-8')
 
+            print("stk coming....",data)
             payload = {
                 "BusinessShortCode": business_short_code,
                 "Password": stk_password,
@@ -84,7 +85,7 @@ class STKPushAPIView(APIView):
                 "PhoneNumber": phone_number,
                 "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/",
                 "AccountReference": web_name,
-                "TransactionDesc": "Payment of a ticket",
+                "TransactionDesc": "Payment of a product",
             }
 
             response = requests.post(
@@ -94,15 +95,15 @@ class STKPushAPIView(APIView):
             )
 
             data =  response.json()
-            if data.status == 200:
+            if response.status_code == 200:
                 payment = Payment(
                 user_id=user_id,
                 amount=request.data.get('amount'),
                 status='pending',
-                transaction_id=timestamp(uuid.uuid4())
+                transaction_id=str(uuid.uuid4())
             )
             payment.save()
-            return JsonResponse(response.json())
+            return Response(response.json())
             
 
         except json.JSONDecodeError:

@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+#CORS ALLOW ORIGIN
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://localhost:8000']
+
 
 # Application definition
 
@@ -39,6 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     #local app installed
     "pay.apps.PayConfig",
+    'corsheaders',
+    'rest_framework_simplejwt',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [

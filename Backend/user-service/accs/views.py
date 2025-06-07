@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        # The serializer handles validation and authentication
+        # serializer handles validation and authentication
         serializer = self.get_serializer(data=request.data)
 
         try:
@@ -34,8 +34,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             logger.error(f"Token validation failed: {e}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Access the authenticated user object directly from the serializer
-        # Simple JWT's TokenObtainPairSerializer populates `self.user` on successful validation.
+       
         authenticated_user = serializer.user
 
         # # --- Debugging authenticated_user ---
@@ -55,23 +54,22 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         access_token_data = serializer.validated_data['access']
         refresh_token_data = serializer.validated_data['refresh']
 
-        # Calculate expiration time
+        # calc expiration time
         access_token_lifetime = settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=60))
         expires_at_utc = datetime.utcnow() + access_token_lifetime # JWT exp is typically UTC timestamp
 
-        # Connect to Redis
+        # konnect to Redis
         redis_client = redis.Redis(
             host=os.getenv('REDIS_HOST', 'localhost'),
             port=int(os.getenv('REDIS_PORT', 6379)),
             decode_responses=True
         )
 
-        # Store token metadata
-        token_key = f"token:{access_token_data}" # Use the actual access token string
+        token_key = f"token:{access_token_data}" 
         redis_client.hset(token_key, mapping={
             'user_id': str(authenticated_user.id),
             'username': authenticated_user.username,
-            'expires': str(int(expires_at_utc.timestamp())) # Convert to timestamp string
+            'expires': str(int(expires_at_utc.timestamp()))  
         })
         redis_client.expire(token_key, int(access_token_lifetime.total_seconds()))
 

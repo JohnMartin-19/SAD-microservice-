@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import QRCode from 'react-qr-code';
 import html2canvas from 'html2canvas';
 import { motion } from 'framer-motion';
+import {jwtDecode} from 'jwt-decode'
 
 const Checkout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -117,20 +118,31 @@ const Checkout = () => {
   };
 
   const validatePhoneNumber = (phone) => {
-    const regex = /^\+2547\d{8}$/;
+    const regex = /^2547\d{8}$/;
     return regex.test(phone);
   };
 
   const handleMpesaSubmit = async () => {
     if (!validatePhoneNumber(mpesaPhone)) {
-      toast.error('Please enter a valid phone number in format +2547XXXXXXXX');
+      toast.error('Please enter a valid phone number in format 2547XXXXXXXX');
       return;
     }
 
     const token = localStorage.getItem('token');
+    let userId = null;
+    if (token) {
+        try {
+            const decodedToken = jwtDecode(token);
+            userId = decodedToken.user_id; 
+        } catch (error) {
+            console.error("Failed to decode token:", error);
+          
+        }
+    }
     const payload = {
       phone_number: mpesaPhone,
       amount: totalAmountState,
+      user_id:userId,
       // order_id: receiptData?.order_id || 0, // This might not be available yet if payment is before checkout
     };
 
@@ -178,7 +190,9 @@ const Checkout = () => {
     }
 
 
+    
     const token = localStorage.getItem('token');
+    
     const payload = {
       cart: cartState.map(item => ({
         product_id: item.id,
@@ -190,6 +204,7 @@ const Checkout = () => {
         name: userDetails.name,
         email: userDetails.email,
         phone: userDetails.phone,
+
       },
       shipping_address: {
         address: shippingAddress.address,

@@ -5,7 +5,7 @@ import base64
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import *
+from .models import Payment  # Assuming your Payment model is here
 from django.views.decorators.csrf import csrf_exempt
 import json
 import os
@@ -14,17 +14,23 @@ import requests
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
-from rest_framework import status
+# from rest_framework import status # Already imported, no need to repeat
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+# It's generally recommended to put load_dotenv() in your project's settings.py
+# or wsgi.py/asgi.py for a Django application.
+load_dotenv()
+
 ########################################## PAYMENTS APIS ###########################################
 #### MPESA STK
 class STKPushAPIView(APIView):
-    ############GENERATES AND RETURNS ACCESS TOKEN
-    def get(self,request):
-        consumer_key = settings.MPESA_CONSUMER_KEY
-        consumer_secret = settings.MPESA_CONSUMER_SECRET
+    @staticmethod
+    def get_access_token():
+        consumer_key = os.getenv("MPESA_CONSUMER_KEY")
+        consumer_secret = os.getenv("MPESA_CONSUMER_SECRET")
 
-
-        # check that the credentials are provided
         if not consumer_key or not consumer_secret:
             raise Exception("M-Pesa consumer key or secret not found in environment variables")
 
@@ -36,44 +42,58 @@ class STKPushAPIView(APIView):
                 "Content-Type": "application/json"
             }
             response = requests.get(url, headers=headers).json()
-            print(response)
+            print(response) # Log M-Pesa token response
             if "access_token" in response:
                 return response["access_token"]
             else:
-                raise Exception("Failed to get access token: " + response.get("error_description", "Unknown error"))
+                raise Exception("Failed to get M-Pesa access token: " + response.get("error_description", "Unknown error"))
         except Exception as e:
-            raise Exception("Failed to get access token: " + str(e))
+            raise Exception("Failed to get M-Pesa access token: " + str(e))
 
-    ######INITIATES THE STK PUSH TO BE SENT ############
-    def post(self,request):
-        """
-        STK push endpoint.
-        """
+    def post(self, request):
         try:
             user_id = request.data.get('user_id')
-            user_response = requests.get(f'http://user-service:8000/api/users/{user_id}/', headers={
-                'Authorization': request.headers.get('Authorization')
-            })
-            if user_response.status_code != 200:
-                return Response({'error': 'Invalid user'}, status=status.HTTP_400_BAD_REQUEST)
+            print('User...', user_id)
+            phone = request.data.get('phone_number')
             
-            access_token = self.get()
+            if not user_id:
+                return Response({'error': 'invalid user'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Re-enable this section if user validation from user-service is required.
+            # Remember to ensure the user-service is running and authentication details are correct.
+            # auth_header = request.headers.get('Authorization')
+            # user_service_url = f'http://127.0.0.1:8001/accounts/api/v1/users/{user_id}/' # Use the correct URL
+            # headers_for_user_service = {}
+            # if auth_header:
+            #     headers_for_user_service['Authorization'] = auth_header
+            # user_response = requests.get(user_service_url, headers=headers_for_user_service)
+            # if user_response.status_code != 200:
+            #     try:
+            #         error_data = user_response.json()
+            #     except json.JSONDecodeError:
+            #         error_data = {"raw_response": user_response.text}
+            #     print(f"Error from user-service ({user_response.status_code}): {error_data}")
+            #     return Response({'error': 'Invalid user from user-service', 'details': error_data}, status=status.HTTP_400_BAD_REQUEST)
+
+            access_token = self.get_access_token()
             headers = {"Authorization": f"Bearer {access_token}"}
             timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
-            pass_key = settings.MPESA_PASS_KEY
+            business_short_code = os.getenv("MPESA_BUSINESS_SHORT_CODE")
+            pass_key = os.getenv("MPESA_PASS_KEY")
 
-            # Validate that the credentials are provided
             if not business_short_code or not pass_key:
                 raise Exception("M-Pesa business short code or pass key not found in environment variables")
 
-            data = json.loads(request.body)
-            phone_number = data.get('phone_number')
-            amount = data.get('amount')
+            phone_number = request.data.get('phone_number')
+            amount = request.data.get('amount')
+
+            if not phone_number or not amount:
+                return Response({'error': 'Phone number and amount are required'}, status=status.HTTP_400_BAD_REQUEST)
+            
             web_name = "M-FARM"
             stk_password = base64.b64encode((business_short_code + pass_key + timestamp).encode('utf-8')).decode('utf-8')
 
-            print("stk coming....",data)
+            print("stk coming....", request.data)
             payload = {
                 "BusinessShortCode": business_short_code,
                 "Password": stk_password,
@@ -83,7 +103,7 @@ class STKPushAPIView(APIView):
                 "PartyA": phone_number,
                 "PartyB": business_short_code,
                 "PhoneNumber": phone_number,
-                "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/",
+                "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/", # Ensure this ngrok URL is active
                 "AccountReference": web_name,
                 "TransactionDesc": "Payment of a product",
             }
@@ -94,25 +114,33 @@ class STKPushAPIView(APIView):
                 json=payload,
             )
 
-            data =  response.json()
+            # Assign to response_json for consistent access
+            response_json = response.json()
+            print(f"M-Pesa STK Push API response: {response_json}")
+
             if response.status_code == 200:
-                payment = Payment(
-                user_id=user_id,
-                amount=request.data.get('amount'),
-                status='pending',
-                transaction_id=str(uuid.uuid4())
-            )
-            payment.save()
-            return Response(response.json())
-            
+                if response_json.get('ResponseCode') == '0':
+                    payment = Payment(
+                        user_id=user_id,
+                        amount=amount,
+                        status='pending',
+                        transaction_id=response_json.get('CheckoutRequestID', str(uuid.uuid4()))
+                    )
+                    payment.save()
+                    return Response(response_json)
+                else:
+                    return Response({'error': response_json.get('ResponseDescription', 'M-Pesa API error'), 'details': response_json}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'error': 'Failed to initiate STK Push with M-Pesa API', 'details': response_json}, status=response.status_code)
 
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+            return JsonResponse({'error': 'Invalid JSON format in request body'}, status=400)
         except requests.exceptions.RequestException as e:
-            return JsonResponse({'error': f'Request error: {e}'}, status=500)
+            print(f"Network error during M-Pesa STK push: {e}")
+            return JsonResponse({'error': f'Network error communicating with M-Pesa: {e}'}, status=500)
         except Exception as e:
-            print(f"Error in stkpush: {e}")
-            return JsonResponse({'error': 'Internal server error'}, status=500)
+            print(f"Unhandled error in stkpush: {e}")
+            return JsonResponse({'error': f'Internal server error: {e}'}, status=500)
 
     @csrf_exempt
     def mpesa_callback(request):
@@ -125,9 +153,13 @@ class STKPushAPIView(APIView):
                 result_desc = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultDesc")
 
                 if result_code == 0:
+                    # Implement logic to update Payment status to 'completed' here
+                    # You would need to fetch the payment record using the CheckoutRequestID
+                    # from the callback_data and update its status.
                     print("Payment successful: ", result_desc)
                     return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
                 else:
+                    # Implement logic to update Payment status to 'failed' here
                     print(f"Payment failed: {result_desc}")
                     return JsonResponse({"ResultCode": 1, "ResultDesc": "Payment failed"})
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
+
 const FooterWrapper = styled.footer`
   background-color: #1a1a1a;
   color: #fff;
@@ -70,10 +71,11 @@ const Footer = () => (
       <FooterColumn>
         <h3>Follow Us</h3>
         <ul>
-          <li><a href="#">Facebook</a></li>
-          <li><a href="#">Twitter</a></li>
-          <li><a href="#">Instagram</a></li>
-          <li><a href="#">YouTube</a></li>
+          {/* Changed <a> to <span> since they don't have real links yet */}
+          <li><span>Facebook</span></li>
+          <li><span>Twitter</span></li>
+          <li><span>Instagram</span></li>
+          <li><span>YouTube</span></li>
         </ul>
       </FooterColumn>
       <FooterColumn>
@@ -81,22 +83,23 @@ const Footer = () => (
         <ul>
           <li>Email: info@m-farm.agro</li>
           <li>Phone: +254768171426</li>
-          <li>Address:Gilgil,Nakuru City, Kenya</li>
+          <li>Address: Gilgil, Nakuru City, Kenya</li>
         </ul>
       </FooterColumn>
       <FooterColumn>
         <h3>Quick Links</h3>
         <ul>
-          <li><a href="#">Upcoming Farmers Events</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">FAQs</a></li>
-          <li><a href="#">Privacy Policy</a></li>
+          {/* Changed <a> to <span> since they don't have real links yet */}
+          <li><span>Upcoming Farmers Events</span></li>
+          <li><span>Blog</span></li>
+          <li><span>FAQs</span></li>
+          <li><span>Privacy Policy</span></li>
         </ul>
       </FooterColumn>
       <FooterColumn>
         <h3>About Us</h3>
         <p>
-          We are dedicated to bringing the best services to our esteemed customers as well as farmers using our digital platform. In opartnership with the Small and Medium farmers, we are able to bring these services at their fingertips. Making agriculture better for Kenya and EA at large.
+          We are dedicated to bringing the best services to our esteemed customers as well as farmers using our digital platform. In partnership with the Small and Medium farmers, we are able to bring these services at their fingertips. Making agriculture better for Kenya and EA at large.
         </p>
       </FooterColumn>
     </FooterContainer>

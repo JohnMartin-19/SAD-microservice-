@@ -1,7 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
+
+// Animation variants (kept as-is, they are fine)
+const fadeInUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+};
+
+const scaleUp = {
+  hidden: { scale: 0.9, opacity: 0 },
+  visible: { scale: 1, opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+};
+
+const staggerChildren = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
 
 const Profile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,59 +40,42 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Animation variants
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
-  };
-
-  const scaleUp = {
-    hidden: { scale: 0.9, opacity: 0 },
-    visible: { scale: 1, opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } },
-  };
-
-  const staggerChildren = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  // Fetch profile data on mount
-  useEffect(() => {
-    const token = localStorage.getItem('token'); // Fixed to access_token for JWT
-    console.log('Logged in user token:', token);
-    if (!token) {
-      navigate('/login');
-    } else {
-      fetchProfileData(token);
-    }
-},[navigate]);
-
-  const fetchProfileData = async (token) => {
+  // Memoize fetchProfileData using useCallback
+  const fetchProfileData = useCallback(async (token) => {
     try {
-      const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
+      // Use environment variable for API base URL
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Profile fetch error:', errorData);
         throw new Error(errorData.detail || 'Failed to fetch profile');
       }
+
       const data = await response.json();
       setProfile(data);
-      setPhotoPreview(data.photo ? `http://localhost:8001${data.photo}` : null);
+      // Use environment variable for photo URL if it's a relative path
+      setPhotoPreview(data.photo ? `${process.env.REACT_APP_API_BASE_URL}${data.photo}` : null);
     } catch (err) {
       console.error('Fetch error:', err.message);
       setError(err.message);
       navigate('/login');
     }
-  };
+  }, [navigate, setProfile, setPhotoPreview, setError]); // Dependencies of fetchProfileData itself
+
+  // useEffect to fetch profile data on component mount or dependency change
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    } else {
+      fetchProfileData(token);
+    }
+  }, [navigate, fetchProfileData]); // Include fetchProfileData in dependencies
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -99,21 +103,25 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
+      // Use environment variable for API base URL
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Update error:', errorData);
         throw new Error(errorData.errors || 'Failed to update profile');
       }
+
       const updatedProfile = await response.json();
       setProfile(updatedProfile);
-      setPhotoPreview(updatedProfile.photo ? `http://localhost:8001${updatedProfile.photo}` : null);
+      // Use environment variable for photo URL
+      setPhotoPreview(updatedProfile.photo ? `${process.env.REACT_APP_API_BASE_URL}${updatedProfile.photo}` : null);
       setIsEditing(false);
       setError(null);
     } catch (err) {
@@ -128,17 +136,20 @@ const Profile = () => {
     }
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:8001/accounts/api/v1/profile/', {
+      // Use environment variable for API base URL
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Delete error:', errorData);
         throw new Error(errorData.detail || 'Failed to delete account');
       }
+
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       navigate('/login');
@@ -292,7 +303,8 @@ const Profile = () => {
                         className="btn btn-outline-secondary shadow-sm w-50"
                         onClick={() => {
                           setIsEditing(false);
-                          fetchProfileData(localStorage.getItem('token')); // Reset form
+                          // Reset form by re-fetching profile
+                          fetchProfileData(localStorage.getItem('token'));
                         }}
                       >
                         Cancel

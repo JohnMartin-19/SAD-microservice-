@@ -5,7 +5,7 @@ import base64
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Payment  # Assuming your Payment model is here
+from .models import Payment  
 from django.views.decorators.csrf import csrf_exempt
 import json
 import os
@@ -14,13 +14,11 @@ import requests
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
-# from rest_framework import status # Already imported, no need to repeat
+
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
-# It's generally recommended to put load_dotenv() in your project's settings.py
-# or wsgi.py/asgi.py for a Django application.
+
 load_dotenv()
 
 ########################################## PAYMENTS APIS ###########################################
@@ -59,22 +57,7 @@ class STKPushAPIView(APIView):
             if not user_id:
                 return Response({'error': 'invalid user'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Re-enable this section if user validation from user-service is required.
-            # Remember to ensure the user-service is running and authentication details are correct.
-            # auth_header = request.headers.get('Authorization')
-            # user_service_url = f'http://127.0.0.1:8001/accounts/api/v1/users/{user_id}/' # Use the correct URL
-            # headers_for_user_service = {}
-            # if auth_header:
-            #     headers_for_user_service['Authorization'] = auth_header
-            # user_response = requests.get(user_service_url, headers=headers_for_user_service)
-            # if user_response.status_code != 200:
-            #     try:
-            #         error_data = user_response.json()
-            #     except json.JSONDecodeError:
-            #         error_data = {"raw_response": user_response.text}
-            #     print(f"Error from user-service ({user_response.status_code}): {error_data}")
-            #     return Response({'error': 'Invalid user from user-service', 'details': error_data}, status=status.HTTP_400_BAD_REQUEST)
-
+        
             access_token = self.get_access_token()
             headers = {"Authorization": f"Bearer {access_token}"}
             timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

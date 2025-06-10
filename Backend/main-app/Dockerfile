@@ -38,11 +38,15 @@ RUN pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 # Copy application code
 COPY . .
 
+
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 # # Run migrations
 # RUN python3 manage.py migrate
 
 # Switch to non-root user
 USER appuser
-
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 # Command to run the application (modify as needed)
 CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

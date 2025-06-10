@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
 import os
-
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -94,6 +95,19 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+
+# # --- ADD THESE PRINT STATEMENTS ---
+# print(f"DEBUG: os.getenv('DB_NAME') = {os.getenv('DB_NAME')}")
+# print(f"DEBUG: os.getenv('DB_USER') = {os.getenv('DB_USER')}")
+# print(f"DEBUG: os.getenv('DB_PASSWORD') = {os.getenv('DB_PASSWORD')}")
+# print(f"DEBUG: os.getenv('DB_HOST') = {os.getenv('DB_HOST')}")
+# print(f"DEBUG: DATABASES['default']['NAME'] = {DATABASES['default']['NAME']}")
+# print(f"DEBUG: DATABASES['default']['USER'] = {DATABASES['default']['USER']}")
+# print(f"DEBUG: DATABASES['default']['PASSWORD'] = {DATABASES['default']['PASSWORD']}")
+# print(f"DEBUG: DATABASES['default']['HOST'] = {DATABASES['default']['HOST']}")
+# # --- END DEBUG PRINTS ---
+
 
 LOGGING = {
     'version': 1,

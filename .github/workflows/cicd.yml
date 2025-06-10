@@ -27,15 +27,15 @@ jobs:
       # Frontend Deployment (S3 + CloudFront)
       - name: Install Frontend Dependencies and Build
         run: |
-          cd Frontend/m-farm/src
+          cd Frontend/m-farm/
           npm install
-          npm run build # This creates the 'build' directory with static files
+          npm run build 
 
       - name: Deploy Frontend to S3
         env:
           S3_BUCKET_NAME: m-farm
         run: |
-          cd Frontend
+          cd Frontend/m-farm/
           aws s3 sync build/ s3://$S3_BUCKET_NAME --delete --acl public-read # Syncs build output to S3, deletes old files
 
       - name: Invalidate CloudFront Cache

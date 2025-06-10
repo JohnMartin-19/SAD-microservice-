@@ -1,8 +1,10 @@
+# k8s-manifests/user-service-deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: m-farm-user-service
-  namespace: default
+  namespace: default # Ensure this matches your deployment namespace
 spec:
   replicas: 2
   selector:
@@ -17,32 +19,14 @@ spec:
       initContainers:
         - name: migrate-user-db
           # Use the same application image for running migrations
-          image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-user-service:latest
+          image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-m-farm-user-service:${{ github.sha }} # Use your ECR image, ideally with github.sha tag
           # The command to run Django migrations
-          command: ["python3", "manage.py", "migrate"]
-          env:
-            # Pass database connection details as environment variables
-            # Use valueFrom.secretKeyRef to securely pull from the new Kubernetes Secret
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: mfarm-accounts-db-secret # Name of the Kubernetes Secret for user-service
-                  key: db_name
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mfarm-accounts-db-secret
-                  key: db_user
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mfarm-accounts-db-secret
-                  key: db_password
-            - name: DB_HOST
-              # IMPORTANT: Replace with the actual hostname of your PostgreSQL RDS instance
-              value: "m-farm-accounts.cq32e02eaaeq.us-east-1.rds.amazonaws.com"
-            - name: DB_PORT
-              value: "5432" # Default PostgreSQL port, adjust if yours is different
+          command: ["python3", "manage.py", "migrate", "--noinput"] # Added --noinput for non-interactive execution
+          envFrom: # Load environment variables from ConfigMap and Secret
+            - configMapRef:
+                name: mfarm-user-config # Reference the ConfigMap
+            - secretRef:
+                name: mfarm-user-secrets # Reference the Secret
           resources:
             requests:
               cpu: "50m"
@@ -53,9 +37,9 @@ spec:
 
       containers:
       - name: m-farm-user-service
-        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-user-service:latest
+        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-m-farm-user-service:${{ github.sha }} # Use your ECR image, ideally with github.sha tag
         ports:
-        - containerPort: 8080 # <--- ADJUST THIS PORT if user-service uses a different one
+        - containerPort: 8001 # Based on your previous YAML for user-service. Confirm this is correct.
         resources:
           requests:
             cpu: "100m"
@@ -63,37 +47,20 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
-        env:
-            # Also pass database connection details to the main application container for runtime
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: mfarm-accounts-db-secret # Name of the Kubernetes Secret for user-service
-                  key: db_name
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mfarm-accounts-db-secret
-                  key: db_user
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mfarm-accounts-db-secret
-                  key: db_password
-            - name: DB_HOST
-              # IMPORTANT: Replace with the actual hostname of your PostgreSQL RDS instance
-              value: "m-farm-accounts.cq32e02eaaeq.us-east-1.rds.amazonaws.com"
-            - name: DB_PORT
-              value: "5432" # Default PostgreSQL port, adjust if yours is different
+        envFrom: # Load environment variables from ConfigMap and Secret
+          - configMapRef:
+              name: mfarm-user-config # Reference the ConfigMap
+          - secretRef:
+              name: mfarm-user-secrets # Reference the Secret
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8080 # <--- ADJUST THIS PORT
+            path: /health 
+            port: 8001 
           initialDelaySeconds: 15
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
-            port: 8080 # <--- ADJUST THIS PORT
+            path: /health 
+            port: 8001 
           initialDelaySeconds: 5
           periodSeconds: 5

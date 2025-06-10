@@ -21,6 +21,6 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 #switch to non-root user
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8002
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "payments.wsgi:application"]
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8002"]

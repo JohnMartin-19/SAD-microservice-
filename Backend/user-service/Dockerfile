@@ -32,10 +32,10 @@ RUN mkdir -p /var/lib/apt/lists/partial && \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+
 RUN pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
-# Copy application code
+# copy application code
 COPY . .
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -46,7 +46,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Switch to non-root user
 USER appuser
-
+EXPOSE 8001
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 # Command to run the application (modify as needed)
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8001"]

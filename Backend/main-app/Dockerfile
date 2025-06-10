@@ -47,6 +47,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Switch to non-root user
 USER appuser
+EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 # Command to run the application (modify as needed)
 CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

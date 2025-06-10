@@ -1,8 +1,10 @@
+# k8s-manifests/payment-service-deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: m-farm-payment-service
-  namespace: default
+  namespace: default # Ensure this matches your deployment namespace
 spec:
   replicas: 2
   selector:
@@ -13,11 +15,31 @@ spec:
       labels:
         app: m-farm-payment-service
     spec:
+      # Define the initContainer for database migrations
+      initContainers:
+        - name: migrate-payment-db
+          # Use the same application image for running migrations
+          image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-m-farm-payment-service:${{ github.sha }} # Use your ECR image, ideally with github.sha tag
+          # The command to run Django migrations
+          command: ["python3", "manage.py", "migrate", "--noinput"]
+          envFrom: # Load environment variables from ConfigMap and Secret
+            - configMapRef:
+                name: mfarm-payment-config # Reference the ConfigMap
+            - secretRef:
+                name: mfarm-payment-secrets # Reference the Secret
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "100Mi"
+            limits:
+              cpu: "100m"
+              memory: "200Mi"
+
       containers:
       - name: m-farm-payment-service
-        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-payment-service:latest
+        image: 740857577909.dkr.ecr.us-east-1.amazonaws.com/m-farm-m-farm-payment-service:${{ github.sha }} # Use your ECR image, ideally with github.sha tag
         ports:
-        - containerPort: 8080
+        - containerPort: 8000 # Assuming Django Gunicorn runs on 8000. Confirm if it's 8080.
         resources:
           requests:
             cpu: "100m"
@@ -25,15 +47,20 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+        envFrom: # Load environment variables from ConfigMap and Secret
+          - configMapRef:
+              name: mfarm-payment-config # Reference the ConfigMap
+          - secretRef:
+              name: mfarm-payment-secrets # Reference the Secret
         livenessProbe:
           httpGet:
-            path: /health
-            port: 8080
+            path: /health 
+            port: 8002
           initialDelaySeconds: 15
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
-            port: 8080
+            path: /health 
+            port: 8002 
           initialDelaySeconds: 5
           periodSeconds: 5

@@ -108,6 +108,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:8002',
     'http://localhost:8001',
+    # "http://m-farm.s3-website-us-east-1.amazonaws.com/",
 ]
 
 DATABASES = {

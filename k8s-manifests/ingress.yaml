@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: m-farm-api-ingress
+  namespace: default 
+  annotations:
+    #  AWS Load Balancer Controller to provision an ALB
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing 
+    alb.ingress.kubernetes.io/target-type: ip 
+    alb.ingress.kubernetes.io/backend-protocol: HTTP 
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]' 
+
+    # You might want HTTPS later, which requires an ACM Certificate ARN.
+    # If you add HTTPS, uncomment these and replace with your ARN:
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/your-certificate-id
+    # alb.ingress.kubernetes.io/ssl-redirect: '443' # Redirect HTTP to HTTPS
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /accounts/* # Path for user service (e.g., /accounts/api/v1/register/)
+        pathType: Prefix
+        backend:
+          service:
+            name: m-farm-user-service # Matches your user service deployment name
+            port:
+              number: 8001 # Matches the containerPort of your user service
+      - path: /payment/* # Path for payment service
+        pathType: Prefix
+        backend:
+          service:
+            name: m-farm-payment-service # Matches your payment service deployment name
+            port:
+              number: 8002 # Matches the containerPort of your payment service
+      - path: /products/* # Path for product service
+        pathType: Prefix
+        backend:
+          service:
+            name: m-farm-product-service # Matches your product service deployment name
+            port:
+              number: 8000 # Matches the containerPort of your product service

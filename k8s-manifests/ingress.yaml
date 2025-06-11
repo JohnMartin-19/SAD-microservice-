@@ -20,24 +20,24 @@ spec:
   rules:
   - http:
       paths:
-      - path: /accounts/* # Path for user service (e.g., /accounts/api/v1/register/)
+      - path: /accounts/* 
         pathType: Prefix
         backend:
           service:
-            name: m-farm-user-service # Matches your user service deployment name
+            name: m-farm-user-service 
             port:
-              number: 8001 # Matches the containerPort of your user service
-      - path: /payment/* # Path for payment service
+              number: 8001 
+      - path: /payment/* 
         pathType: Prefix
         backend:
           service:
-            name: m-farm-payment-service # Matches your payment service deployment name
+            name: m-farm-payment-service 
             port:
-              number: 8002 # Matches the containerPort of your payment service
-      - path: /products/* # Path for product service
+              number: 8002 
+      - path: /products/* 
         pathType: Prefix
         backend:
           service:
-            name: m-farm-product-service # Matches your product service deployment name
+            name: m-farm-product-service 
             port:
-              number: 8000 # Matches the containerPort of your product service
+              number: 8000 

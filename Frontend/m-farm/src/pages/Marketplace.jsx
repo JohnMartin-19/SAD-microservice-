@@ -9,28 +9,8 @@ const Marketplace = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const categories = [
-    { value: '', label: 'All Categories' },
-    { value: 'CEREALS', label: 'Cereals' },
-    { value: 'LEGUMES', label: 'Legumes' },
-    { value: 'ROOTS_TUBERS', label: 'Roots and Tubers' },
-    { value: 'VEGETABLES', label: 'Vegetables' },
-    { value: 'FRUITS', label: 'Fruits' },
-    { value: 'NUTS_SEEDS', label: 'Nuts and Seeds' },
-    { value: 'LIVESTOCK', label: 'Livestock' },
-    { value: 'LIVESTOCK_PRODUCTS', label: 'Livestock Products' },
-    { value: 'POULTRY', label: 'Poultry' },
-    { value: 'FISH', label: 'Fish' },
-    { value: 'HERBS_SPICES', label: 'Herbs and Spices' },
-    { value: 'OIL_CROPS', label: 'Oil Crops' },
-    { value: 'FIBER_CROPS', label: 'Fiber Crops' },
-    { value: 'FORESTRY_PRODUCTS', label: 'Forestry Products' },
-    { value: 'OTHER', label: 'Other' },
-  ];
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 50 },
@@ -66,19 +46,14 @@ const Marketplace = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-      let token = localStorage.getItem('token')
+      let token = localStorage.getItem('token');
       try {
-        const url = categoryFilter
-          ? `http://localhost:8000/mfarm/api/v1/products/?category=${categoryFilter}`
-          : 'http://localhost:8000/mfarm/api/v1/products/';
-          const headers = {
-            'Content-Type': 'application/json', 
-            'Authorization': `Bearer ${token}`,
-          };
-          // if (token) {
-          //   headers['Authorization'] = `Bearer ${token}`;
-          // }
-        const response = await fetch(url,{ headers: headers });
+        const url = 'http://localhost:8000/mfarm/api/v1/products/';
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        };
+        const response = await fetch(url, { headers: headers });
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }
@@ -106,7 +81,7 @@ const Marketplace = () => {
     };
 
     fetchProducts();
-  }, [categoryFilter]);
+  }, []);
 
   useEffect(() => {
     if (!searchQuery) {
@@ -151,7 +126,7 @@ const Marketplace = () => {
 
     console.log('New cart state:', newCart);
     setCart(newCart);
-    setShowCart(false); // Show cart to verify addition
+    setShowCart(true); // Changed to true to show cart after adding item
   };
 
   const removeFromCart = (id) => {
@@ -176,7 +151,7 @@ const Marketplace = () => {
 
       <motion.div
         className="container py-5 mx-auto"
-        style={{ maxWidth: '60%' }} // Increased from 70% to 90%
+        style={{ maxWidth: '60%' }}
         initial="hidden"
         animate="visible"
         variants={staggerChildren}
@@ -191,16 +166,6 @@ const Marketplace = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <select
-              className="form-select shadow-sm"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              style={{ maxWidth: '150px' }}
-            >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
           </div>
           <motion.button
             className="btn btn-success position-absolute top-0 end-0 mt-2 me-2 shadow-sm"
@@ -229,11 +194,11 @@ const Marketplace = () => {
         ) : (
           !showCart ? (
             <motion.div className="row g-4" variants={staggerChildren}>
-              <motion.div className="col-12" variants={staggerChildren}> 
+              <motion.div className="col-12" variants={staggerChildren}>
                 {filteredProducts.length === 0 ? (
                   <motion.p variants={fadeInUp}>No products found.</motion.p>
                 ) : (
-                  <motion.div className="row row-cols-1 row-cols-md-4 g-4" variants={staggerChildren}> {/* Changed from row-cols-md-3 to row-cols-md-4 */}
+                  <motion.div className="row row-cols-1 row-cols-md-4 g-4" variants={staggerChildren}>
                     {filteredProducts.map(product => (
                       <motion.div key={product.id} className="col" variants={scaleUp}>
                         <div className="card h-100 shadow-sm border-0">
@@ -241,7 +206,7 @@ const Marketplace = () => {
                             src={product.image}
                             className="card-img-top"
                             alt={product.title}
-                            style={{ height: '180px', objectFit: 'cover' }} // Slightly reduced height to fit 4 columns
+                            style={{ height: '180px', objectFit: 'cover' }}
                           />
                           <div className="card-body">
                             <h5 className="card-title fw-semibold text-dark">{product.title}</h5>
@@ -374,7 +339,7 @@ const Marketplace = () => {
                           >
                             <path
                               fillRule="evenodd"
-                              d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 0 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l-4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
+                              d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 0 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"
                             />
                           </svg>
                           Marketplace

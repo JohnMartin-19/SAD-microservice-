@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-// import corn from '../assets/cornn.mp4'
+import  cornharvest  from '../assets/corn-harvest.jpg';
+
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -34,54 +35,37 @@ const Home = () => {
 
       {/* Hero Section */}
       <motion.section
-      className="d-flex align-items-center justify-content-center text-white position-relative"
-      style={{
-        minHeight: '100vh',
-        overflow: 'hidden',
-        background: 'linear-gradient(to bottom, rgba(46, 125, 50, 0) 0%, rgba(46, 125, 50, 1) 50%, rgba(46, 125, 50, 0) 100%)',
-        marginTop:"3px" // Ensure video doesn't overflow
-      }}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.3 }}
-      variants={staggerChildren}
-    >
-      {/* Video Background */}
-      {/* <video
-        autoPlay
-        muted
-        loop
-        playsInline // Improves mobile compatibility
+        className="d-flex align-items-center justify-content-center text-white position-relative"
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover', // Ensures video covers the section
-          zIndex: -2, // Place video behind content
+          minHeight: '100vh',
+          overflow: 'hidden',
+          backgroundImage: `url(${cornharvest})`, // Set the background image
+          backgroundSize: 'cover', // Ensure the image covers the section
+          backgroundPosition: 'center', // Center the image
+          backgroundRepeat: 'no-repeat', // Prevent image repetition
+          marginTop: '0px', // Maintain the original margin
         }}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={staggerChildren}
       >
-        <source src={corn} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video> */}
+        {/* Optional Gradient Overlay (if needed) */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            // background: 'linear-gradient(to bottom, rgba(46, 125, 50, 0) 0%, rgba(97, 109, 98, 0.5) 50%, rgba(46, 125, 50, 0) 100%)', // Adjusted opacity for better visibility
+            zIndex: 0, // Place above the image but below content
+          }}
+        ></div>
 
-      {/* Gradient Overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          
-          zIndex: -1, // Place gradient above video but below content
-        }}
-      ></div>
-      
         <motion.div
           className="text-center px-3"
-          style={{ backgroundColor: 'transparent' }}
+          style={{ backgroundColor: 'transparent', position: 'relative', zIndex: 1 }} // Ensure content is above overlay
           variants={fadeInUp}
         >
           <motion.h1 className="display-4 fw-semibold mb-4 text-shadow" variants={fadeInUp}>
@@ -100,7 +84,7 @@ const Home = () => {
           >
             <motion.div variants={scaleUp}>
               <Link to="/marketplace">
-                <button className="btn btn-successs btn-lg px-4 py-2 shadow" style={{backgroundColor:" #2e7d32", color:"white"}}>
+                <button className="btn btn-success btn-lg px-4 py-2 shadow" style={{ backgroundColor: '#2e7d32', color: 'white' }}>
                   Buy Fresh Crops
                 </button>
               </Link>

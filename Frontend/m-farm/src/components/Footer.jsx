@@ -83,7 +83,7 @@ const Footer = () => (
         <ul>
           <li>Email: info@m-farm.agro</li>
           <li>Phone: +254768171426</li>
-          <li>Address: Gilgil, Nakuru City, Kenya</li>
+          <li>Address: Nairobi City, Kenya</li>
         </ul>
       </FooterColumn>
       <FooterColumn>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import corn from '../assets/cornn.mp4'
+// import corn from '../assets/cornn.mp4'
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -36,8 +36,10 @@ const Home = () => {
       <motion.section
       className="d-flex align-items-center justify-content-center text-white position-relative"
       style={{
-        minHeight: '90vh',
-        overflow: 'hidden', // Ensure video doesn't overflow
+        minHeight: '100vh',
+        overflow: 'hidden',
+        background: 'linear-gradient(to bottom, rgba(46, 125, 50, 0) 0%, rgba(46, 125, 50, 1) 50%, rgba(46, 125, 50, 0) 100%)',
+        marginTop:"3px" // Ensure video doesn't overflow
       }}
       initial="hidden"
       whileInView="visible"
@@ -45,7 +47,7 @@ const Home = () => {
       variants={staggerChildren}
     >
       {/* Video Background */}
-      <video
+      {/* <video
         autoPlay
         muted
         loop
@@ -62,7 +64,7 @@ const Home = () => {
       >
         <source src={corn} type="video/mp4" />
         Your browser does not support the video tag.
-      </video>
+      </video> */}
 
       {/* Gradient Overlay */}
       <div
@@ -79,7 +81,7 @@ const Home = () => {
       
         <motion.div
           className="text-center px-3"
-          style={{ background: 'transparent' }}
+          style={{ backgroundColor: 'transparent' }}
           variants={fadeInUp}
         >
           <motion.h1 className="display-4 fw-semibold mb-4 text-shadow" variants={fadeInUp}>

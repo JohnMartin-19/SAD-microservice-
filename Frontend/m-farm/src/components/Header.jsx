@@ -85,7 +85,7 @@ const HeaderWrapper = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color:#2e7f32;
+  background: linear-gradient(to top, rgba(46, 125, 50, 1), rgba(46, 125, 50, 0));
   opacity:100;
   color: white;
   position: relative;

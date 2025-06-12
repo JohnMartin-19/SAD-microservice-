@@ -69,14 +69,14 @@ const TopBarIcon = styled.svg`
   width: 2rem;
   height: 2rem;
   margin-right: 0.5rem;
-  fill:  #2e7d32;
+  fill:rgb(7, 79, 10);
 `;
 
 const CiClockIcon = styled(CiClock2)`
   width: 2rem;
   height: 2rem;
   margin-right: 0.5rem;
-  fill:  #2e7d32;
+  fill:  rgb(7, 79, 10);
 `;
 
 // Existing styled components for header
@@ -85,7 +85,7 @@ const HeaderWrapper = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color:#2e7f32;
+  background-color:rgb(7, 79, 10);
   opacity:100;
   color: white;
   position: relative;

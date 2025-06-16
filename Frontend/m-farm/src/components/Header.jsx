@@ -4,8 +4,10 @@ import styled from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown } from 'react-bootstrap';
 import { CiClock2 } from 'react-icons/ci';
+// Import new icons
+import { FaHome, FaShoppingBasket, FaUserTie, FaChartBar, FaSignInAlt, FaUserPlus,FaUser } from 'react-icons/fa';
 
-// Styled components for top bar
+// Styled components for top bar (kept as is, but commented out in return)
 const TopBar = styled.div`
   background-color: #f5f5f5;
   padding: 0.5rem 1rem;
@@ -105,6 +107,8 @@ const Nav = styled.nav`
     border: none;
     cursor: pointer;
     padding: 0;
+    display: flex; /* Added for icon alignment */
+    align-items: center; /* Added for icon alignment */
 
     &:hover {
       color: #e0e0e0;
@@ -122,6 +126,10 @@ const Nav = styled.nav`
     padding: 1rem;
     z-index: 1000;
   }
+`;
+
+const NavLinkContent = styled.span`
+  margin-left: 0.5rem; /* Space between icon and text */
 `;
 
 const HamburgerButton = styled.button`
@@ -243,18 +251,20 @@ const Header = ({ isOpen, toggleMenu }) => {
   }, [isAuthenticated]);
 
   const handleLogout = async () => {
+    let token = localStorage.getItem("token")
     setIsLoggingOut(true);
     try {
       await fetch('http://localhost:8001/accounts/api/v1/logout/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       localStorage.removeItem('token');
     } catch (err) {
       console.error('Logout error:', err);
+      // Even if logout API fails, clear token for user experience
       localStorage.removeItem('token');
     }
 
@@ -266,33 +276,48 @@ const Header = ({ isOpen, toggleMenu }) => {
 
   return (
     <>
-      <TopBar>
+      {/* TopBar commented out as it was in your original code, uncomment if needed */}
+      {/* <TopBar>
         <Gab>
           <TopBarIcon viewBox="0 0 24 24">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
           </TopBarIcon>
           Nairobi,Kenya
         </Gab>
-        <Gab1 href="https://www.mfarm.co.ke">
+        <Gab1 href="https://www.mfarm.agro">
           <TopBarIcon viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </TopBarIcon>
-          www.mfarm.co.ke
+          www.mfarm.agro
         </Gab1>
         <Gab2>
           <CiClockIcon />
           Mon - Saturday, 8am - 8pm
         </Gab2>
-      </TopBar>
+      </TopBar> */}
       <HeaderWrapper>
         <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
           <h1>M-Farm</h1>
         </Link>
         <Nav isOpen={isOpen}>
-          <Link to="/">Home</Link>
-          <Link to="/marketplace">Marketplace</Link>
-          <Link to="/experts">Experts</Link>
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/">
+            <FaHome />
+            <NavLinkContent>Home</NavLinkContent>
+          </Link>
+          <Link to="/marketplace">
+            <FaShoppingBasket />
+            <NavLinkContent>Marketplace</NavLinkContent>
+          </Link>
+          <Link to="/experts">
+            <FaUserTie />
+            <NavLinkContent>Experts</NavLinkContent>
+          </Link>
+          {isAuthenticated && ( // Conditionally render Dashboard link
+            <Link to="/dashboard">
+              <FaChartBar />
+              <NavLinkContent>Dashboard</NavLinkContent>
+            </Link>
+          )}
           {isAuthenticated ? (
             <Dropdown>
               <Dropdown.Toggle as="div" id="profile-dropdown">
@@ -313,8 +338,14 @@ const Header = ({ isOpen, toggleMenu }) => {
             </Dropdown>
           ) : (
             <>
-              <Link to="/login">Login</Link>
-              <Link to="/signup">Sign Up</Link>
+              <Link to="/login">
+                <FaSignInAlt />
+                <NavLinkContent>Login</NavLinkContent>
+              </Link>
+              <Link to="/signup">
+                <FaUserPlus />
+                <NavLinkContent>Sign Up</NavLinkContent>
+              </Link>
             </>
           )}
         </Nav>

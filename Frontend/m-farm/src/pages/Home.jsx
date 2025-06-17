@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import  cornharvest  from '../assets/corn-harvest.jpg';
+import cornharvest from '../assets/corn-harvest.jpg';
 
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,7 +43,7 @@ const Home = () => {
           backgroundSize: 'cover', // Ensure the image covers the section
           backgroundPosition: 'center', // Center the image
           backgroundRepeat: 'no-repeat', // Prevent image repetition
-          marginTop: '0px', // Maintain the original margin
+          // Removed original marginTop as it's not strictly necessary with minHeight & flex alignment
         }}
         initial="hidden"
         whileInView="visible"
@@ -65,12 +65,20 @@ const Home = () => {
 
         <motion.div
           className="text-center px-3"
-          style={{ backgroundColor: 'transparent', position: 'relative', zIndex: 1 }} // Ensure content is above overlay
+          style={{
+            backgroundColor: 'transparent',
+            position: 'relative',
+            zIndex: 1,
+            paddingTop: '80px', // <--- ADDED: Push content down from the top
+            paddingBottom: '80px', // <--- OPTIONAL: Add some padding at the bottom too
+          }} // Ensure content is above overlay
           variants={fadeInUp}
         >
           <motion.h1 className="display-1 fw-semibold mb-4 text-shadow" variants={fadeInUp} style={{marginBottom:"30px"}}>
             <span style={{color:"white"}}>Welcome </span>to M-Farm
           </motion.h1>
+          <br />
+          <br />
           <motion.p
             className="lead mb-5 mx-auto"
             style={{ maxWidth: '600px' }}
@@ -78,6 +86,8 @@ const Home = () => {
           >
             Connecting Kenyan farmers to markets, experts, and opportunities.
           </motion.p>
+          <br />
+          <br />
           <motion.div
             className="d-flex justify-content-center gap-3 flex-wrap"
             variants={staggerChildren}

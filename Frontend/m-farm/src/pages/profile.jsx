@@ -1,10 +1,16 @@
+// src/pages/Profile.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
 import Header from '../components/Header';
 
+import { useTheme } from '../ThemeContext';
+// If you're using usePageHeaderTheme from App.jsx, ensure it's imported:
+// import { usePageHeaderTheme } from '../App';
 
-// Animation variants (kept as-is, they are fine)
+
 const fadeInUp = {
   hidden: { opacity: 0, y: 50 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
@@ -41,11 +47,13 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Memoize fetchProfileData using useCallback
+  const { themeMode, toggleTheme } = useTheme();
+  // const pageHeaderTheme = usePageHeaderTheme(); // Uncomment if used for local styling
+
   const fetchProfileData = useCallback(async (token) => {
     try {
-      // Use environment variable for API base URL
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
+      // Use the environment variable for the API endpoint
+      const response = await fetch(`http://127.0.0.1:8001/accounts/api/v1/profile/`, { // Added trailing slash
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -54,29 +62,35 @@ const Profile = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Profile fetch error:', errorData);
+
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('token');
+          navigate('/login', { replace: true });
+        }
+
         throw new Error(errorData.detail || 'Failed to fetch profile');
       }
 
       const data = await response.json();
+      console.log("logged in user",data)
       setProfile(data);
-      // Use environment variable for photo URL if it's a relative path
-      setPhotoPreview(data.photo ? `${process.env.REACT_APP_API_BASE_URL}${data.photo}` : null);
+      // Correctly construct the photo URL using the base URL and the relative path from the API
+      setPhotoPreview(data.photo ? `http://127.0.0.1:8001${data.photo}` : null);
     } catch (err) {
       console.error('Fetch error:', err.message);
       setError(err.message);
-      navigate('/login');
     }
-  }, [navigate, setProfile, setPhotoPreview, setError]); // Dependencies of fetchProfileData itself
+  }, [navigate, setProfile, setPhotoPreview, setError]);
 
-  // useEffect to fetch profile data on component mount or dependency change
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-    } else {
+
+    if (token) {
       fetchProfileData(token);
+    } else {
+      navigate('/login', { replace: true });
     }
-  }, [navigate, fetchProfileData]); // Include fetchProfileData in dependencies
+  }, [fetchProfileData, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -93,19 +107,24 @@ const Profile = () => {
 
   const handleSave = async () => {
     const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Not authenticated. Please log in.');
+      navigate('/login', { replace: true });
+      return;
+    }
+
     const formData = new FormData();
     formData.append('first_name', profile.first_name || '');
     formData.append('email', profile.email || '');
     formData.append('phone', profile.phone || '');
     formData.append('bio', profile.bio || '');
     formData.append('location', profile.location || '');
-    if (profile.photo && typeof profile.photo !== 'string') {
+    if (profile.photo instanceof File) {
       formData.append('photo', profile.photo);
     }
 
     try {
-      // Use environment variable for API base URL
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
+      const response = await fetch(`${process.env.ACCOUNTS_REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -116,13 +135,16 @@ const Profile = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Update error:', errorData);
-        throw new Error(errorData.errors || 'Failed to update profile');
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            navigate('/login', { replace: true });
+        }
+        throw new Error(errorData.errors ? JSON.stringify(errorData.errors) : 'Failed to update profile');
       }
 
       const updatedProfile = await response.json();
       setProfile(updatedProfile);
-      // Use environment variable for photo URL
-      setPhotoPreview(updatedProfile.photo ? `${process.env.REACT_APP_API_BASE_URL}${updatedProfile.photo}` : null);
+      setPhotoPreview(updatedProfile.photo ? `${process.env.ACCOUNTS_REACT_APP_API_BASE_URL}${updatedProfile.photo}` : null);
       setIsEditing(false);
       setError(null);
     } catch (err) {
@@ -136,9 +158,14 @@ const Profile = () => {
       return;
     }
     const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Not authenticated. Please log in.');
+      navigate('/login', { replace: true });
+      return;
+    }
+
     try {
-      // Use environment variable for API base URL
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
+      const response = await fetch(`${process.env.ACCOUNTS_REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -148,12 +175,15 @@ const Profile = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Delete error:', errorData);
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            navigate('/login', { replace: true });
+        }
         throw new Error(errorData.detail || 'Failed to delete account');
       }
 
       localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (err) {
       console.error('Delete error:', err.message);
       setError(err.message);
@@ -161,25 +191,36 @@ const Profile = () => {
   };
 
   return (
-    <div className="text-gray-800 min-vh-100 d-flex flex-column">
-      <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
+    <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: themeMode === 'dark' ? '#121212' : '#f0f2f5', color: themeMode === 'dark' ? 'white' : '#333' }}>
+      <Header
+        isOpen={isMenuOpen}
+        toggleMenu={() => setIsMenuOpen(!isMenuOpen)}
+        toggleTheme={toggleTheme}
+        themeMode={themeMode}
+        // If you need pageHeaderTheme in Header, you would pass it like this:
+        // pageHeaderTheme={pageHeaderTheme}
+      />
 
-      {/* Main Content */}
       <motion.div
         className="container py-5 flex-grow-1 d-flex align-items-center justify-content-center"
         initial="hidden"
         animate="visible"
         variants={fadeInUp}
+        style={{ paddingTop: '5rem' }}
       >
         <motion.div
           className="card shadow-lg border-0"
-          style={{ maxWidth: '100%', width: '100%', minHeight: '70vh' }}
+          style={{ maxWidth: '100%', width: '100%', minHeight: '70vh',
+                   backgroundColor: themeMode === 'dark' ? '#1e1e1e' : 'white',
+                   color: themeMode === 'dark' ? 'white' : '#333'
+                }}
           variants={scaleUp}
         >
           <div className="card-body p-5">
             <motion.h2
-              className="display-6 fw-semibold text-center mb-5 text-success"
+              className="display-6 fw-semibold text-center mb-5"
               variants={fadeInUp}
+              style={{ color: themeMode === 'dark' ? '#4CAF50' : '#2e7d32' }}
             >
               Your Profile
             </motion.h2>
@@ -191,7 +232,6 @@ const Profile = () => {
             )}
 
             <div className="row g-4">
-              {/* Profile Photo */}
               <div className="col-md-4 text-center">
                 <motion.div
                   className="mb-3"
@@ -217,7 +257,6 @@ const Profile = () => {
                 </motion.div>
               </div>
 
-              {/* Profile Details */}
               <div className="col-md-8">
                 <motion.div variants={staggerChildren} initial="hidden" animate="visible">
                   {isEditing ? (
@@ -230,6 +269,11 @@ const Profile = () => {
                           className="form-control"
                           value={profile.first_name || ''}
                           onChange={handleInputChange}
+                          style={{
+                              backgroundColor: themeMode === 'dark' ? '#333' : 'white',
+                              color: themeMode === 'dark' ? 'white' : '#333',
+                              borderColor: themeMode === 'dark' ? '#555' : '#ccc'
+                          }}
                         />
                       </motion.div>
                       <motion.div className="mb-3" variants={fadeInUp}>
@@ -240,6 +284,11 @@ const Profile = () => {
                           className="form-control"
                           value={profile.email || ''}
                           onChange={handleInputChange}
+                          style={{
+                              backgroundColor: themeMode === 'dark' ? '#333' : 'white',
+                              color: themeMode === 'dark' ? 'white' : '#333',
+                              borderColor: themeMode === 'dark' ? '#555' : '#ccc'
+                          }}
                         />
                       </motion.div>
                       <motion.div className="mb-3" variants={fadeInUp}>
@@ -250,6 +299,11 @@ const Profile = () => {
                           className="form-control"
                           value={profile.phone || ''}
                           onChange={handleInputChange}
+                           style={{
+                              backgroundColor: themeMode === 'dark' ? '#333' : 'white',
+                              color: themeMode === 'dark' ? 'white' : '#333',
+                              borderColor: themeMode === 'dark' ? '#555' : '#ccc'
+                          }}
                         />
                       </motion.div>
                       <motion.div className="mb-3" variants={fadeInUp}>
@@ -260,6 +314,11 @@ const Profile = () => {
                           rows="3"
                           value={profile.bio || ''}
                           onChange={handleInputChange}
+                           style={{
+                              backgroundColor: themeMode === 'dark' ? '#333' : 'white',
+                              color: themeMode === 'dark' ? 'white' : '#333',
+                              borderColor: themeMode === 'dark' ? '#555' : '#ccc'
+                          }}
                         />
                       </motion.div>
                       <motion.div className="mb-3" variants={fadeInUp}>
@@ -270,33 +329,42 @@ const Profile = () => {
                           className="form-control"
                           value={profile.location || ''}
                           onChange={handleInputChange}
+                           style={{
+                              backgroundColor: themeMode === 'dark' ? '#333' : 'white',
+                              color: themeMode === 'dark' ? 'white' : '#333',
+                              borderColor: themeMode === 'dark' ? '#555' : '#ccc'
+                          }}
                         />
                       </motion.div>
                     </>
                   ) : (
                     <>
-                      <motion.p variants={fadeInUp}><strong>Name:</strong> {profile.first_name || 'N/A'}</motion.p>
+                      <motion.p variants={fadeInUp}><strong style={{color: themeMode === 'dark' ? '#99cc99' : '#1B5E20'}}>Name:</strong> {profile.first_name || 'N/A'}</motion.p>
                       <br />
-                      <motion.p variants={fadeInUp}><strong>Email:</strong> {profile.email || 'N/A'}</motion.p>
+                      <motion.p variants={fadeInUp}><strong style={{color: themeMode === 'dark' ? '#99cc99' : '#1B5E20'}}>Email:</strong> {profile.email || 'N/A'}</motion.p>
                       <br />
-                      <motion.p variants={fadeInUp}><strong>Phone:</strong> {profile.phone || 'N/A'}</motion.p>
+                      <motion.p variants={fadeInUp}><strong style={{color: themeMode === 'dark' ? '#99cc99' : '#1B5E20'}}>Phone:</strong> {profile.phone || 'N/A'}</motion.p>
                       <br />
-                      <motion.p variants={fadeInUp}><strong>Bio:</strong> {profile.bio || 'N/A'}</motion.p>
+                      <motion.p variants={fadeInUp}><strong style={{color: themeMode === 'dark' ? '#99cc99' : '#1B5E20'}}>Bio:</strong> {profile.bio || 'N/A'}</motion.p>
                       <br />
-                      <motion.p variants={fadeInUp}><strong>Location:</strong> {profile.location || 'N/A'}</motion.p>
+                      <motion.p variants={fadeInUp}><strong style={{color: themeMode === 'dark' ? '#99cc99' : '#1B5E20'}}>Location:</strong> {profile.location || 'N/A'}</motion.p>
                       <br />
                       <br />
                     </>
                   )}
                 </motion.div>
 
-                {/* Buttons */}
                 <motion.div className="d-flex gap-3 mt-4" variants={fadeInUp}>
                   {isEditing ? (
                     <>
                       <button
                         className="btn btn-success shadow-sm w-50"
                         onClick={handleSave}
+                        style={{
+                            backgroundColor: themeMode === 'dark' ? '#4CAF50' : '#2e7d32',
+                            borderColor: themeMode === 'dark' ? '#4CAF50' : '#2e7d32',
+                            color: 'white'
+                        }}
                       >
                         Save Changes
                       </button>
@@ -304,8 +372,12 @@ const Profile = () => {
                         className="btn btn-outline-secondary shadow-sm w-50"
                         onClick={() => {
                           setIsEditing(false);
-                          // Reset form by re-fetching profile
                           fetchProfileData(localStorage.getItem('token'));
+                        }}
+                        style={{
+                            color: themeMode === 'dark' ? 'white' : '#6c757d',
+                            borderColor: themeMode === 'dark' ? '#6c757d' : '#6c757d',
+                            backgroundColor: 'transparent'
                         }}
                       >
                         Cancel
@@ -316,12 +388,22 @@ const Profile = () => {
                       <button
                         className="btn btn-success shadow-sm w-50"
                         onClick={() => setIsEditing(true)}
+                        style={{
+                            backgroundColor: themeMode === 'dark' ? '#4CAF50' : '#2e7d32',
+                            borderColor: themeMode === 'dark' ? '#4CAF50' : '#2e7d32',
+                            color: 'white'
+                        }}
                       >
                         Edit Profile
                       </button>
                       <button
                         className="btn btn-outline-danger shadow-sm w-50"
                         onClick={handleDeleteAccount}
+                        style={{
+                            color: themeMode === 'dark' ? '#dc3545' : '#dc3545',
+                            borderColor: themeMode === 'dark' ? '#dc3545' : '#dc3545',
+                            backgroundColor: 'transparent'
+                        }}
                       >
                         Delete Account
                       </button>

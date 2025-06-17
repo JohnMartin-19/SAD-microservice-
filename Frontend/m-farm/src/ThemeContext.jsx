@@ -1,6 +1,6 @@
 // src/ThemeContext.js
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from './themes'; 
 import { createGlobalStyle } from 'styled-components';

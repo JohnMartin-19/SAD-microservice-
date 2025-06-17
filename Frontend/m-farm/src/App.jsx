@@ -1,8 +1,10 @@
+// src/App.jsx
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
 
 import Header from './components/Header';
+import PrivateRoute from './components/PrivateRoute'; // <-- IMPORT PrivateRoute
 
 // page components
 import Home from './pages/Home';
@@ -14,8 +16,8 @@ import Login from './pages/login';
 import Checkout from './pages/checkout';
 import Profile from './pages/profile';
 
-
-import { ThemeProvider, useTheme } from './ThemeContext'; 
+// Assuming ThemeContext.js is in src/ThemeContext.js or similar
+import { ThemeProvider, useTheme } from './ThemeContext';
 
 const GlobalLayoutStyles = createGlobalStyle`
   html, body, #root {
@@ -25,25 +27,22 @@ const GlobalLayoutStyles = createGlobalStyle`
     height: 100%;
     overflow-x: hidden;
   }
-  /* Add body background and color from theme here, if not already in GlobalStyle in ThemeContext */
   body {
     background-color: ${({ theme }) => theme.bodyBackground};
-    color: ${({ theme }) => theme.headerText}; /* Or a more general default text color */
+    color: ${({ theme }) => theme.headerText};
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 `;
 
 const PageHeaderThemeContext = createContext('dark-background');
-
 export const usePageHeaderTheme = () => useContext(PageHeaderThemeContext);
 
 const AppContainer = styled.div`
   position: relative;
   width: 100vw;
-  min-height: 100vh; /* Changed to min-height for better content handling */
+  min-height: 100vh;
   overflow-x: hidden;
 `;
-
 
 function AppContent() {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -55,36 +54,29 @@ function AppContent() {
     setIsNavOpen(prev => !prev);
   };
 
-  const location = useLocation(); 
-
+  const location = useLocation();
 
   useEffect(() => {
-    
     const whiteBackgroundPages = ['/marketplace', '/checkout', '/signup', '/login', '/experts', '/dashboard', '/profile'];
-   
     if (whiteBackgroundPages.includes(location.pathname)) {
-      setPageHeaderTheme('light-background'); 
+      setPageHeaderTheme('light-background');
     } else {
-      setPageHeaderTheme('dark-background'); 
+      setPageHeaderTheme('dark-background');
     }
   }, [location.pathname]);
 
-
   return (
     <AppContainer>
-     
-      <GlobalLayoutStyles theme={currentTheme} /> 
+      <GlobalLayoutStyles theme={currentTheme} />
 
       <PageHeaderThemeContext.Provider value={pageHeaderTheme}>
         <Header
           isOpen={isNavOpen}
           toggleMenu={toggleNavMenu}
-          toggleTheme={toggleTheme} 
-          themeMode={themeMode}     
-         
+          toggleTheme={toggleTheme}
+          themeMode={themeMode}
         />
       </PageHeaderThemeContext.Provider>
-
 
       {isNavOpen && (
         <div
@@ -105,23 +97,28 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/marketplace" element={<Marketplace />} />
-        <Route path="/dashboard" element={<FarmerDashboard />} />
         <Route path="/experts" element={<ExpertConsultation />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/profile" element={<Profile />} />
+
+        {/* --- PROTECTED ROUTES --- */}
+        {/* All routes nested here will require authentication */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/dashboard" element={<FarmerDashboard />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+        {/* ------------------------ */}
+
       </Routes>
     </AppContainer>
   );
 }
 
-
 function App() {
   return (
-    <Router> 
+    <Router>
       <ThemeProvider>
-    
         <AppContent />
       </ThemeProvider>
     </Router>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'; // Added useMemo
+import React, { useState, useEffect, useRef, useMemo } from 'react'; 
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -22,23 +22,21 @@ const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Initialize cart and totalAmount directly at component mount using useMemo
-  // This calculates the initial state once, either from location.state or sessionStorage,
-  // preventing re-renders from state updates inside useEffect.
+ 
   const initialCart = useMemo(() => {
     if (location.state && location.state.cart && location.state.cart.length) {
       return location.state.cart;
     }
     const savedCart = sessionStorage.getItem('cart');
     if (savedCart) {
-      // Ensure quantities are parsed as numbers if coming from sessionStorage
+     
       return JSON.parse(savedCart).map(item => ({
         ...item,
         quantity: parseInt(item.quantity, 10)
       }));
     }
-    return []; // Default to an empty array if no cart data is found
-  }, [location.state]); // Dependency array: only re-calculate if location.state changes
+    return []; 
+  }, [location.state]); 
 
   const initialTotalAmount = useMemo(() => {
     return initialCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -60,14 +58,13 @@ const Checkout = () => {
     }
     console.log('Token found:', token);
 
-    // Redirect if cart is empty after initial load (based on cartState)
-    // This effect runs after the component mounts and initial state is set
-    if (!cartState.length) { // Now safely checking cartState, which is initialized via useMemo
+
+    if (!cartState.length) { 
       console.log('Cart is empty, redirecting to marketplace');
       toast.error('Your cart is empty. Add products to proceed.');
       navigate('/marketplace');
     }
-  }, [navigate, cartState, location.state]); // cartState is now a dependency to react to subsequent changes
+  }, [navigate, cartState, location.state]); 
 
 
   useEffect(() => {
@@ -496,9 +493,7 @@ const Checkout = () => {
                           className="form-check-input"
                           onChange={handlePaymentMethodChange}
                           checked={paymentMethod === method.id}
-                          // This disabled logic seems a bit off, consider if it's truly needed
-                          // If you select M-Pesa, others are disabled. But if you select something else, M-Pesa is not disabled.
-                          // disabled={paymentMethod && paymentMethod !== method.id && paymentMethod === 'mpesa'}
+                         
                         />
                         <label htmlFor={method.id} className="form-check-label">
                           {method.label}
@@ -536,10 +531,7 @@ const Checkout = () => {
           </>
         )}
 
-        {/* Bootstrap M-Pesa Modal (you'll need to ensure this is closed properly
-           and includes your styling/logic for showing/hiding it. I'm assuming
-           it's defined outside this snippet but within your return statement.)
-        */}
+      
         {showMpesaModal && (
           <motion.div
             className="modal"
@@ -547,7 +539,7 @@ const Checkout = () => {
             animate="visible"
             exit="exit"
             variants={modalVariants}
-            style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} // Simple overlay style
+            style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} 
           >
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
@@ -560,7 +552,7 @@ const Checkout = () => {
                   <input
                     type="tel"
                     className="form-control"
-                    placeholder="+2547XXXXXXXX"
+                    placeholder="2547XXXXXXXX"
                     value={mpesaPhone}
                     onChange={(e) => setMpesaPhone(e.target.value)}
                   />

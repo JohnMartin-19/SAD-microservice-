@@ -124,7 +124,7 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.ACCOUNTS_REACT_APP_API_BASE_URL}/accounts/api/v1/profile/`, {
+      const response = await fetch(`http://127.0.0.1:8001/accounts/api/v1/profile/`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

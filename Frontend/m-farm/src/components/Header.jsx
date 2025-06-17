@@ -8,7 +8,7 @@ import { Dropdown } from 'react-bootstrap';
 import {
   FaHome, FaShoppingBasket, FaUserTie, FaChartBar,
   FaSignInAlt, FaUserPlus, FaUser, FaSignOutAlt,
-  FaBars, FaTimes, FaSun, FaMoon 
+  FaBars, FaTimes, FaSun, FaMoon,FaRegUserCircle 
 } from 'react-icons/fa';
 
 
@@ -157,25 +157,16 @@ const OverlayMessage = styled.p`
   border-radius: 8px;
   text-align: center;
 `;
-
-const ProfileImage = styled.img`
+const UserIconPlaceholder = styled.div`
+  font-size: 40px; /* Match the size of ProfileImage */
   width: 40px;
   height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  object-fit: cover;
-  cursor: pointer;
-  border: 2px solid white;
-
-  &:hover {
-    border-color: #e0e0e0;
-  }
-`;
-
-const PlaceholderImage = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #ccc;
+  background-color: #ccc; /* Or a color from your theme */
+  color: #666; /* Color of the icon itself */
   border: 2px solid white;
   cursor: pointer;
 
@@ -183,6 +174,32 @@ const PlaceholderImage = styled.div`
     border-color: #e0e0e0;
   }
 `;
+
+// const ProfileImage = styled.img`
+//   width: 40px;
+//   height: 40px;
+//   border-radius: 50%;
+//   object-fit: cover;
+//   cursor: pointer;
+//   border: 2px solid white;
+
+//   &:hover {
+//     border-color: #e0e0e0;
+//   }
+// `;
+
+// const PlaceholderImage = styled.div`
+//   width: 40px;
+//   height: 40px;
+//   border-radius: 50%;
+//   background-color: #ccc;
+//   border: 2px solid white;
+//   cursor: pointer;
+
+//   &:hover {
+//     border-color: #e0e0e0;
+//   }
+// `;
 
 const StyledDropdownMenu = styled(Dropdown.Menu)`
   background-color: ${props => props.theme.secondaryGreen} !important; /* Use theme color */
@@ -338,13 +355,14 @@ const Header = ({ isOpen, toggleMenu }) => {
           {isAuthenticated ? (
             <Dropdown className="w-100">
               <Dropdown.Toggle as="div" id="profile-dropdown">
-                {userProfile && userProfile.photo ? (
-                  <ProfileImage src={userProfile.photo} alt="Profile" />
-                ) : (
-                  <PlaceholderImage />
-                )}
-                <NavLinkContent>{userProfile?.first_name || 'Profile'}</NavLinkContent>
-              </Dropdown.Toggle>
+              
+              
+                <UserIconPlaceholder>
+                  <FaRegUserCircle /> {/* Or FaUser, FaUserCircle, etc. */}
+                </UserIconPlaceholder>
+              
+              <NavLinkContent>{userProfile?.first_name || 'Profile'}</NavLinkContent>
+            </Dropdown.Toggle>
               <StyledDropdownMenu align="start">
                 <Dropdown.Item as={Link} to="/profile" onClick={toggleMenu}>
                   <FaUser style={{ marginRight: '0.5rem' }} />

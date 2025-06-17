@@ -197,8 +197,7 @@ const Profile = () => {
         toggleMenu={() => setIsMenuOpen(!isMenuOpen)}
         toggleTheme={toggleTheme}
         themeMode={themeMode}
-        // If you need pageHeaderTheme in Header, you would pass it like this:
-        // pageHeaderTheme={pageHeaderTheme}
+       
       />
 
       <motion.div

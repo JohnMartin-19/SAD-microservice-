@@ -165,8 +165,8 @@ const UserIconPlaceholder = styled.div`
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: #ccc; /* Or a color from your theme */
-  color: #666; /* Color of the icon itself */
+  background-color: white; 
+  color: grey; 
   border: 2px solid white;
   cursor: pointer;
 
@@ -361,7 +361,7 @@ const Header = ({ isOpen, toggleMenu }) => {
                   <FaRegUserCircle /> {/* Or FaUser, FaUserCircle, etc. */}
                 </UserIconPlaceholder>
               
-              <NavLinkContent>{userProfile?.first_name || 'Profile'}</NavLinkContent>
+              <NavLinkContent style={{color:"white"}}>{userProfile?.first_name || 'Profile'}</NavLinkContent>
             </Dropdown.Toggle>
               <StyledDropdownMenu align="start">
                 <Dropdown.Item as={Link} to="/profile" onClick={toggleMenu}>

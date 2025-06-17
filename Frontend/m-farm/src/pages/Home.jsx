@@ -8,7 +8,6 @@ import cornharvest from '../assets/corn-harvest.jpg';
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Animation variants
   const fadeInUp = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
@@ -43,14 +42,14 @@ const Home = () => {
           backgroundSize: 'cover', // Ensure the image covers the section
           backgroundPosition: 'center', // Center the image
           backgroundRepeat: 'no-repeat', // Prevent image repetition
-          // Removed original marginTop as it's not strictly necessary with minHeight & flex alignment
+          
         }}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
         variants={staggerChildren}
       >
-        {/* Optional Gradient Overlay (if needed) */}
+       
         <div
           style={{
             position: 'absolute',
@@ -59,7 +58,7 @@ const Home = () => {
             width: '100%',
             height: '100%',
             // background: 'linear-gradient(to bottom, rgba(46, 125, 50, 0) 0%, rgba(97, 109, 98, 0.5) 50%, rgba(46, 125, 50, 0) 100%)', // Adjusted opacity for better visibility
-            zIndex: 0, // Place above the image but below content
+            zIndex: 0, 
           }}
         ></div>
 
@@ -69,9 +68,9 @@ const Home = () => {
             backgroundColor: 'transparent',
             position: 'relative',
             zIndex: 1,
-            paddingTop: '80px', // <--- ADDED: Push content down from the top
-            paddingBottom: '80px', // <--- OPTIONAL: Add some padding at the bottom too
-          }} // Ensure content is above overlay
+            paddingTop: '80px', 
+            paddingBottom: '80px',
+          }} 
           variants={fadeInUp}
         >
           <motion.h1 className="display-1 fw-semibold mb-4 text-shadow" variants={fadeInUp} style={{marginBottom:"30px"}}>

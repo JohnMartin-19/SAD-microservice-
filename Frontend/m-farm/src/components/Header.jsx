@@ -1,154 +1,142 @@
+// Header.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown } from 'react-bootstrap';
-import { CiClock2 } from 'react-icons/ci';
-// Import new icons
-import { FaHome, FaShoppingBasket, FaUserTie, FaChartBar, FaSignInAlt, FaUserPlus,FaUser } from 'react-icons/fa';
+import {
+  FaHome, FaShoppingBasket, FaUserTie, FaChartBar,
+  FaSignInAlt, FaUserPlus, FaUser, FaSignOutAlt,
+  FaBars, FaTimes, FaSun, FaMoon // Added Sun and Moon icons for theme toggle
+} from 'react-icons/fa';
 
-// Styled components for top bar (kept as is, but commented out in return)
-const TopBar = styled.div`
-  background-color: #f5f5f5;
-  padding: 0.5rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 15px;
-  color: #4b5563;
-  max-width: 100%;
-  margin: 0 auto;
+// Import useTheme hook
+import { useTheme } from '../ThemeContext'; // Adjust path if necessary
+// Import usePageHeaderTheme hook
+import { usePageHeaderTheme } from '../App'; // Adjust path if App.jsx is not in parent directory
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-  }
-`;
+// --- Styled Components ---
 
-const TopBarLink = styled.a`
-  display: flex;
-  align-items: center;
-  color: #4b5563;
-  text-decoration: none;
-
-  &:hover {
-    color:  #2e7d32;
-  }
-`;
-
-const TopBarSpan = styled.span`
-  display: flex;
-  align-items: center;
-  color: #4b5563;
-`;
-
-const Gab = styled(TopBarSpan)`
-  margin-left: 15rem;
-
-  @media (max-width: 768px) {
-    margin-left: 0;
-  }
-`;
-
-const Gab1 = styled(TopBarLink)`
-  margin-right: 15rem;
-
-  @media (max-width: 768px) {
-    margin-right: 0;
-  }
-`;
-
-const Gab2 = styled(TopBarSpan)`
-  margin-right: 5rem;
-
-  @media (max-width: 768px) {
-    margin-right: 0;
-  }
-`;
-
-const TopBarIcon = styled.svg`
-  width: 2rem;
-  height: 2rem;
-  margin-right: 0.5rem;
-  fill:rgb(7, 79, 10);
-`;
-
-const CiClockIcon = styled(CiClock2)`
-  width: 2rem;
-  height: 2rem;
-  margin-right: 0.5rem;
-  fill:  rgb(7, 79, 10);
-`;
-
-// Existing styled components for header
 const HeaderWrapper = styled.header`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color:rgb(7, 79, 10);
-  opacity:100;
-  color: white;
-  position: relative;
+  background-color: transparent;
+  z-index: 1000;
+  transition: background-color 0.3s ease;
+`;
+
+const Logo = styled(Link)`
+  text-decoration: none;
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1;
+    /* Adaptive Logo Color */
+    color: ${props => {
+      // If dark mode is active, override with dark mode color from theme
+      if (props.currentAppTheme === 'dark') return props.theme.headerLogo;
+      // Else, use page-specific color
+      return props.pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen;
+    }};
+  }
+  z-index: 1001;
 `;
 
 const Nav = styled.nav`
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 300px;
+  background-color: ${props => props.theme.navMenuBg}; /* Use theme for nav menu background */
   display: flex;
-  gap: 1.5rem;
-  align-items: center;
+  flex-direction: column;
+  padding: 2rem;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease-out;
+  transform: translateX(${props => (props.isOpen ? '0%' : '100%')});
+  z-index: 1500;
+  overflow-y: auto;
 
   a, button {
-    color: white;
+    color: ${props => props.theme.navMenuText}; /* Use theme for nav menu text */
     text-decoration: none;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    padding: 0.8rem 0;
     transition: color 0.3s ease;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0;
-    display: flex; /* Added for icon alignment */
-    align-items: center; /* Added for icon alignment */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 
     &:hover {
       color: #e0e0e0;
     }
   }
 
-  @media (max-width: 768px) {
-    display: ${props => (props.isOpen ? 'flex' : 'none')};
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
-    left: 0;
+  .dropdown {
     width: 100%;
-    background: #2e7d32;
-    padding: 1rem;
-    z-index: 1000;
+    .dropdown-toggle {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 0.8rem 0;
+    }
   }
 `;
 
 const NavLinkContent = styled.span`
-  margin-left: 0.5rem; /* Space between icon and text */
+  margin-left: 0.5rem;
 `;
 
 const HamburgerButton = styled.button`
-  display: none;
+  display: block;
   background: none;
   border: none;
-  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 1501;
+  transition: transform 0.3s ease;
+
+  /* Adaptive Hamburger Color */
+  color: ${props => {
+    // If dark mode is active, override with dark mode color from theme
+    if (props.currentAppTheme === 'dark') return props.theme.headerHamburger;
+    // Else, use page-specific color
+    return props.pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen;
+  }};
+
+  ${props => props.isOpen && css`
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    color: ${props => props.theme.navMenuText}; /* Close icon color should match menu text */
+  `}
+`;
+
+const ThemeToggleButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => {
+    // Theme toggle icon color should adapt like hamburger, but also consider menu state
+    if (props.isOpen) return props.theme.navMenuText; // When menu is open, use menu text color
+    if (props.currentAppTheme === 'dark') return props.theme.headerHamburger; // Dark mode active
+    return props.pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen; // Page specific
+  }};
   font-size: 1.5rem;
   cursor: pointer;
-
-  @media (max-width: 768px) {
-    display: block;
-    transition: all 0.3s ease-in-out;
-  }
-
-  &:focus {
-    outline: none;
-  }
+  margin-left: 1rem; /* Space from hamburger */
+  z-index: 1501; /* Same as hamburger */
 `;
+
 
 const Overlay = styled.div`
   position: fixed;
@@ -157,7 +145,7 @@ const Overlay = styled.div`
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.7);
-  display: flex;
+  display: ${props => (props.show ? 'flex' : 'none')};
   justify-content: center;
   align-items: center;
   z-index: 2000;
@@ -166,7 +154,7 @@ const Overlay = styled.div`
 const OverlayMessage = styled.p`
   color: white;
   font-size: 1.5rem;
-  background: #2e7d32;
+  background: ${props => props.theme.primaryGreen}; /* Use theme color */
   padding: 2rem;
   border-radius: 8px;
   text-align: center;
@@ -199,31 +187,42 @@ const PlaceholderImage = styled.div`
 `;
 
 const StyledDropdownMenu = styled(Dropdown.Menu)`
-  background-color: #2e7d32 !important;
+  background-color: ${props => props.theme.secondaryGreen} !important; /* Use theme color */
   border: none;
+  position: static !important;
+  transform: none !important;
+  margin-top: 0.5rem;
+  width: 100%;
 
   .dropdown-item {
     color: white;
     font-size: 1rem;
     padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
 
     &:hover {
-      background-color: #1b5e20;
+      background-color: ${props => props.theme.primaryGreen}; /* Use theme color */
       color: #e0e0e0;
     }
 
     &:active {
-      background-color: #1b5e20;
+      background-color: ${props => props.theme.primaryGreen};
       color: white;
     }
   }
 `;
+
 
 const Header = ({ isOpen, toggleMenu }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem('token');
+
+  const { theme: currentAppTheme, toggleTheme } = useTheme();
+ 
+  const pageHeaderTheme = usePageHeaderTheme();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -241,12 +240,18 @@ const Header = ({ isOpen, toggleMenu }) => {
             setUserProfile(data);
           } else {
             console.error('Failed to fetch profile');
+            localStorage.removeItem('token');
+            setUserProfile(null);
           }
         } catch (err) {
           console.error('Profile fetch error:', err);
+          localStorage.removeItem('token');
+          setUserProfile(null);
         }
       };
       fetchUserProfile();
+    } else {
+      setUserProfile(null);
     }
   }, [isAuthenticated]);
 
@@ -262,10 +267,11 @@ const Header = ({ isOpen, toggleMenu }) => {
         },
       });
       localStorage.removeItem('token');
+      setUserProfile(null);
     } catch (err) {
       console.error('Logout error:', err);
-      // Even if logout API fails, clear token for user experience
       localStorage.removeItem('token');
+      setUserProfile(null);
     }
 
     setTimeout(() => {
@@ -276,85 +282,83 @@ const Header = ({ isOpen, toggleMenu }) => {
 
   return (
     <>
-      {/* TopBar commented out as it was in your original code, uncomment if needed */}
-      {/* <TopBar>
-        <Gab>
-          <TopBarIcon viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-          </TopBarIcon>
-          Nairobi,Kenya
-        </Gab>
-        <Gab1 href="https://www.mfarm.agro">
-          <TopBarIcon viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-          </TopBarIcon>
-          www.mfarm.agro
-        </Gab1>
-        <Gab2>
-          <CiClockIcon />
-          Mon - Saturday, 8am - 8pm
-        </Gab2>
-      </TopBar> */}
       <HeaderWrapper>
-        <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
+      
+        <Logo to="/" pageHeaderTheme={pageHeaderTheme} currentAppTheme={currentAppTheme}>
           <h1>M-Farm</h1>
-        </Link>
+        </Logo>
+
+     
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <ThemeToggleButton onClick={toggleTheme} pageHeaderTheme={pageHeaderTheme} currentAppTheme={currentAppTheme} isOpen={isOpen}>
+            {currentAppTheme === 'light' ? <FaMoon /> : <FaSun />}
+          </ThemeToggleButton>
+
+       
+          <HamburgerButton onClick={toggleMenu} isOpen={isOpen} pageHeaderTheme={pageHeaderTheme} currentAppTheme={currentAppTheme}>
+            {isOpen ? <FaTimes /> : <FaBars />}
+          </HamburgerButton>
+        </div>
+
+       
         <Nav isOpen={isOpen}>
-          <Link to="/">
+          <Link to="/" onClick={toggleMenu}>
             <FaHome />
             <NavLinkContent>Home</NavLinkContent>
           </Link>
-          <Link to="/marketplace">
+          <Link to="/marketplace" onClick={toggleMenu}>
             <FaShoppingBasket />
             <NavLinkContent>Marketplace</NavLinkContent>
           </Link>
-          <Link to="/experts">
+          <Link to="/experts" onClick={toggleMenu}>
             <FaUserTie />
             <NavLinkContent>Experts</NavLinkContent>
           </Link>
-          {isAuthenticated && ( // Conditionally render Dashboard link
-            <Link to="/dashboard">
+          {isAuthenticated && (
+            <Link to="/dashboard" onClick={toggleMenu}>
               <FaChartBar />
               <NavLinkContent>Dashboard</NavLinkContent>
             </Link>
           )}
+
           {isAuthenticated ? (
-            <Dropdown>
+            <Dropdown className="w-100">
               <Dropdown.Toggle as="div" id="profile-dropdown">
                 {userProfile && userProfile.photo ? (
                   <ProfileImage src={userProfile.photo} alt="Profile" />
                 ) : (
                   <PlaceholderImage />
                 )}
+                <NavLinkContent>{userProfile?.first_name || 'Profile'}</NavLinkContent>
               </Dropdown.Toggle>
-              <StyledDropdownMenu align="end">
-                <Dropdown.Item as={Link} to="/profile">
+              <StyledDropdownMenu align="start">
+                <Dropdown.Item as={Link} to="/profile" onClick={toggleMenu}>
+                  <FaUser style={{ marginRight: '0.5rem' }} />
                   Profile
                 </Dropdown.Item>
-                <Dropdown.Item as="button" onClick={handleLogout}>
+                <Dropdown.Item as="button" onClick={() => { handleLogout(); toggleMenu(); }}>
+                  <FaSignOutAlt style={{ marginRight: '0.5rem' }} />
                   Logout
                 </Dropdown.Item>
               </StyledDropdownMenu>
             </Dropdown>
           ) : (
             <>
-              <Link to="/login">
+              <Link to="/login" onClick={toggleMenu}>
                 <FaSignInAlt />
                 <NavLinkContent>Login</NavLinkContent>
               </Link>
-              <Link to="/signup">
+              <Link to="/signup" onClick={toggleMenu}>
                 <FaUserPlus />
                 <NavLinkContent>Sign Up</NavLinkContent>
               </Link>
             </>
           )}
         </Nav>
-        <HamburgerButton onClick={toggleMenu}>
-          {isOpen ? '✕' : '☰'}
-        </HamburgerButton>
       </HeaderWrapper>
+
       {isLoggingOut && (
-        <Overlay>
+        <Overlay show={isLoggingOut}>
           <OverlayMessage>Logging you out, wait a min...</OverlayMessage>
         </Overlay>
       )}

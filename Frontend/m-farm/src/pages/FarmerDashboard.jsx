@@ -7,6 +7,7 @@ import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, Toolti
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
 // Register Chart.js components
 ChartJS.register(LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale);
 

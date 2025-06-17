@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Header from '../components/Header';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 // Center the form vertically and horizontally
 const FormWrapper = styled.div`
   display: flex;

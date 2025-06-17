@@ -146,6 +146,7 @@ const Marketplace = () => {
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
+    
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
 

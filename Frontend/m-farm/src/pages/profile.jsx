@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 
+
 // Animation variants (kept as-is, they are fine)
 const fadeInUp = {
   hidden: { opacity: 0, y: 50 },

@@ -68,8 +68,8 @@ const Home = () => {
           style={{ backgroundColor: 'transparent', position: 'relative', zIndex: 1 }} // Ensure content is above overlay
           variants={fadeInUp}
         >
-          <motion.h1 className="display-4 fw-semibold mb-4 text-shadow" variants={fadeInUp}>
-            Welcome to M-Farm
+          <motion.h1 className="display-1 fw-semibold mb-4 text-shadow" variants={fadeInUp} style={{marginBottom:"30px"}}>
+            <span style={{color:"white"}}>Welcome </span>to M-Farm
           </motion.h1>
           <motion.p
             className="lead mb-5 mx-auto"

@@ -8,15 +8,13 @@ import { Dropdown } from 'react-bootstrap';
 import {
   FaHome, FaShoppingBasket, FaUserTie, FaChartBar,
   FaSignInAlt, FaUserPlus, FaUser, FaSignOutAlt,
-  FaBars, FaTimes, FaSun, FaMoon // Added Sun and Moon icons for theme toggle
+  FaBars, FaTimes, FaSun, FaMoon 
 } from 'react-icons/fa';
 
-// Import useTheme hook
-import { useTheme } from '../ThemeContext'; // Adjust path if necessary
-// Import usePageHeaderTheme hook
-import { usePageHeaderTheme } from '../App'; // Adjust path if App.jsx is not in parent directory
 
-// --- Styled Components ---
+import { useTheme } from '../ThemeContext'; 
+
+
 
 const HeaderWrapper = styled.header`
   position: fixed;
@@ -40,6 +38,7 @@ const Logo = styled(Link)`
     line-height: 1;
     /* Adaptive Logo Color - Use transient props here */
     color: ${props => {
+      
       if (props.$currentAppTheme === 'dark') return props.theme.headerLogo;
       return props.$pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen;
     }};
@@ -107,6 +106,7 @@ const HamburgerButton = styled.button`
 
   /* Adaptive Hamburger Color - Use transient props here */
   color: ${props => {
+    // Make sure these props are actually being passed if you need them for Hamburger color
     if (props.$currentAppTheme === 'dark') return props.theme.headerHamburger;
     return props.$pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen;
   }};
@@ -123,17 +123,16 @@ const HamburgerButton = styled.button`
 const ThemeToggleButton = styled.button`
   background: none;
   border: none;
+  /* Color logic can remain here, even if conditionally rendered */
   color: ${props => {
-    // Theme toggle icon color should adapt like hamburger, but also consider menu state
-    // Use transient props here
-    if (props.$isOpen) return props.theme.navMenuText; // When menu is open, use menu text color
-    if (props.$currentAppTheme === 'dark') return props.theme.headerHamburger; // Dark mode active
-    return props.$pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen; // Page specific
+    if (props.$currentAppTheme === 'dark') return props.theme.headerHamburger;
+    return props.$pageHeaderTheme === 'dark-background' ? 'white' : props.theme.primaryGreen;
   }};
   font-size: 1.5rem;
   cursor: pointer;
   margin-left: 1rem; /* Space from hamburger */
   z-index: 1501; /* Same as hamburger */
+  transition: opacity 0.3s ease; /* Added for a smoother fade if you want. */
 `;
 
 
@@ -219,11 +218,10 @@ const Header = ({ isOpen, toggleMenu }) => {
   const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem('token');
 
-  // Destructure currentAppTheme and toggleTheme from useTheme()
   const { theme: currentAppTheme, toggleTheme } = useTheme();
 
-  // Get pageHeaderTheme from its context
-  const pageHeaderTheme = usePageHeaderTheme();
+  const pageHeaderTheme = 'light-background'; 
+
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -285,21 +283,32 @@ const Header = ({ isOpen, toggleMenu }) => {
     <>
       <HeaderWrapper>
 
-        {/* Use transient props with $ prefix */}
-        <Logo to="/" $pageHeaderTheme={pageHeaderTheme} $currentAppTheme={currentAppTheme}>
-          <h1>M-Farm</h1>
-        </Logo>
+        {!isOpen && (
+          <Logo to="/" $pageHeaderTheme={pageHeaderTheme} $currentAppTheme={currentAppTheme}>
+            <h1>M-Farm</h1>
+          </Logo>
+        )}
 
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {/* Use transient props with $ prefix */}
-          <ThemeToggleButton onClick={toggleTheme} $pageHeaderTheme={pageHeaderTheme} $currentAppTheme={currentAppTheme} $isOpen={isOpen}>
-            {currentAppTheme === 'light' ? <FaMoon /> : <FaSun />}
-          </ThemeToggleButton>
+         
+          {!isOpen && ( 
+            <ThemeToggleButton
+              onClick={toggleTheme}
+              $pageHeaderTheme={pageHeaderTheme}
+              $currentAppTheme={currentAppTheme}
+            >
+              {currentAppTheme === 'light' ? <FaMoon /> : <FaSun />}
+            </ThemeToggleButton>
+          )}
 
-
-          {/* Use transient props with $ prefix */}
-          <HamburgerButton onClick={toggleMenu} $isOpen={isOpen} $pageHeaderTheme={pageHeaderTheme} $currentAppTheme={currentAppTheme}>
+         
+          <HamburgerButton
+            onClick={toggleMenu}
+            $isOpen={isOpen}
+            $pageHeaderTheme={pageHeaderTheme}
+            $currentAppTheme={currentAppTheme}
+          >
             {isOpen ? <FaTimes /> : <FaBars />}
           </HamburgerButton>
         </div>

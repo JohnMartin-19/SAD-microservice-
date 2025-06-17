@@ -48,12 +48,12 @@ const Profile = () => {
   const navigate = useNavigate();
 
   const { themeMode, toggleTheme } = useTheme();
-  // const pageHeaderTheme = usePageHeaderTheme(); // Uncomment if used for local styling
+  
 
   const fetchProfileData = useCallback(async (token) => {
     try {
-      // Use the environment variable for the API endpoint
-      const response = await fetch(`http://127.0.0.1:8001/accounts/api/v1/profile/`, { // Added trailing slash
+     
+      const response = await fetch(`http://127.0.0.1:8001/accounts/api/v1/profile/`, { 
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -74,7 +74,7 @@ const Profile = () => {
       const data = await response.json();
       console.log("logged in user",data)
       setProfile(data);
-      // Correctly construct the photo URL using the base URL and the relative path from the API
+     
       setPhotoPreview(data.photo ? `http://127.0.0.1:8001${data.photo}` : null);
     } catch (err) {
       console.error('Fetch error:', err.message);

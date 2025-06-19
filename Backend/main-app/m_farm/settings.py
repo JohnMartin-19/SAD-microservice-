@@ -11,6 +11,8 @@ SECRET_KEY = 'django-insecure-=c(@)*_b2l^!ov5+1ahfkh+@r*iss7nm9&5y*xwb$o)drkn-um
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

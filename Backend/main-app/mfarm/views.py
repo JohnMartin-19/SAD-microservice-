@@ -30,10 +30,13 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 from django.views.decorators.cache import cache_page
 import logging
-
+import google.generativeai as genai
 
 
 logger = logging.getLogger(__name__)
+
+if settings.GEMINI_API_KEY:
+    genai.configure(api_key = settings.GEMINI_API_KEY)
 # Create your views here.
 
 #API ENDPOINTS FOR PRODUCT
@@ -64,11 +67,11 @@ class ProductListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class ProductRetrieveUpdateDeleteView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]  # allow unauthenticated users GET, authenticated PUT/DELETE
+    permission_classes = [IsAuthenticatedOrReadOnly]  
 
     def get(self, request, pk):
         """
-        Retrieve a single product by ID.
+        get a single product by ID.
         """
         try:
             product = Product.objects.get(pk=pk)
@@ -82,7 +85,7 @@ class ProductRetrieveUpdateDeleteView(APIView):
 
     def put(self, request, pk):
         """
-        Update a product by ID.
+        update a product by ID.
         """
         try:
             product = Product.objects.get(pk=pk)
@@ -190,78 +193,34 @@ class RevenueView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 ########################### AI CHAT VIEW ############################
+
 @csrf_exempt
-@cache_page(60 * 60)  # Cache for 1 hour
-def ai_chat(request):
-    if request.method == 'POST':
+def ai_chat_endpoint(request):
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
-            prompt = data.get('prompt', '')
-            if not prompt:
-                return JsonResponse({'error': 'Prompt is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-            api_key = os.getenv('OPENAI_API_KEY')
-            if not api_key:
-                return JsonResponse(
-                    {'error': 'OpenAI API key not configured'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-
-            # Retry logic for 429 errors
-            max_retries = 3
-            retry_delay = 5  # seconds
-            for attempt in range(max_retries):
+            user_prompt = data.get("prompt")
+            
+            if not user_prompt:
+                return JsonResponse({'error':'No prompt found'}, status=400)
+            if settings.GEMINI_API_KEY:
                 try:
-                    response = requests.post(
-                        'https://api.openai.com/v1/chat/completions',
-                        headers={
-                            'Authorization': f'Bearer {api_key}',
-                            'Content-Type': 'application/json',
-                        },
-                        json={
-                            'model': 'gpt-3.5-turbo',
-                            'messages': [
-                                {'role': 'system', 'content': 'You are an agricultural expert.'},
-                                {'role': 'user', 'content': prompt},
-                            ],
-                            'max_tokens': 150,
-                        }
-                    )
-                    response.raise_for_status()
-                    return JsonResponse(response.json(), status=status.HTTP_200_OK)
-
-                except requests.exceptions.HTTPError as e:
-                    if e.response.status_code == 429:
-                        if attempt < max_retries - 1:
-                            time.sleep(retry_delay)
-                            retry_delay *= 2  # Exponential backoff
-                            continue
-                       
-                        return JsonResponse(
-                            {'error': 'Rate limit exceeded. Please try again later.'},
-                            status=status.HTTP_429_TOO_MANY_REQUESTS
-                        )
-                    return JsonResponse(
-                        {'error': f'OpenAI API error: {str(e)}'},
-                        status=e.response.status_code
-                    )
-
+                    # for m in genai.list_models():
+                    #     print(f"{m.name}: {m.description}")
+                    model = genai.GenerativeModel("gemini-2.5-flash")
+                    response = model.generate_content(user_prompt)
+                    ai_response_text = response.text
+                    return JsonResponse({'response':ai_response_text},status=200)
+                except Exception as e:
+                    print('Gemini AI error:',e)
+                    return JsonResponse({'error':'AI model API key missing!'})
+                
+            else:
+                return JsonResponse({'error':'Please configure your API key'})
         except json.JSONDecodeError:
-            return JsonResponse(
-                {'error': 'Invalid JSON in request body'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return JsonResponse(
-                {'error': f'Server error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    return JsonResponse(
-        {'error': 'Invalid request method'},
-        status=status.HTTP_400_BAD_REQUEST
-    )
-
+            return JsonResponse({'error':'Invalid JSON'},status=400)
+    return JsonResponse({'error':'Only POST requests are allowed to this api'})
+            
 
 ###########  ORDER SERVICE API  ##############
 
@@ -483,104 +442,104 @@ class SendReceiptView(APIView):
 
 ########################################## PAYMENTS APIS ###########################################
 #### MPESA STK
-class STKPushAPIView(APIView):
-    ############GENERATES AND RETURNS ACCESS TOKEN
-    def get(request):
-        consumer_key = settings.MPESA_CONSUMER_KEY
-        consumer_secret = settings.MPESA_CONSUMER_SECRET
+# class STKPushAPIView(APIView):
+#     ############GENERATES AND RETURNS ACCESS TOKEN
+#     def get(request):
+#         consumer_key = settings.MPESA_CONSUMER_KEY
+#         consumer_secret = settings.MPESA_CONSUMER_SECRET
 
 
-        # check that the credentials are provided
-        if not consumer_key or not consumer_secret:
-            raise Exception("M-Pesa consumer key or secret not found in environment variables")
+#         # check that the credentials are provided
+#         if not consumer_key or not consumer_secret:
+#             raise Exception("M-Pesa consumer key or secret not found in environment variables")
 
-        url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-        try:
-            encoded_credentials = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
-            headers = {
-                "Authorization": f"Basic {encoded_credentials}",
-                "Content-Type": "application/json"
-            }
-            response = requests.get(url, headers=headers).json()
-            print(response)
-            if "access_token" in response:
-                return response["access_token"]
-            else:
-                raise Exception("Failed to get access token: " + response.get("error_description", "Unknown error"))
-        except Exception as e:
-            raise Exception("Failed to get access token: " + str(e))
+#         url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+#         try:
+#             encoded_credentials = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
+#             headers = {
+#                 "Authorization": f"Basic {encoded_credentials}",
+#                 "Content-Type": "application/json"
+#             }
+#             response = requests.get(url, headers=headers).json()
+#             print(response)
+#             if "access_token" in response:
+#                 return response["access_token"]
+#             else:
+#                 raise Exception("Failed to get access token: " + response.get("error_description", "Unknown error"))
+#         except Exception as e:
+#             raise Exception("Failed to get access token: " + str(e))
 
-    ######INITIATES THE STK PUSH TO BE SENT ############
-    def post(self,request):
-        """
-        STK push endpoint.
-        """
-        try:
-            access_token = self.get()
-            headers = {"Authorization": f"Bearer {access_token}"}
-            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
-            pass_key = settings.MPESA_PASS_KEY
+#     ######INITIATES THE STK PUSH TO BE SENT ############
+#     def post(self,request):
+#         """
+#         STK push endpoint.
+#         """
+#         try:
+#             access_token = self.get()
+#             headers = {"Authorization": f"Bearer {access_token}"}
+#             timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+#             business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
+#             pass_key = settings.MPESA_PASS_KEY
 
-            # Validate that the credentials are provided
-            if not business_short_code or not pass_key:
-                raise Exception("M-Pesa business short code or pass key not found in environment variables")
+#             # Validate that the credentials are provided
+#             if not business_short_code or not pass_key:
+#                 raise Exception("M-Pesa business short code or pass key not found in environment variables")
 
-            data = json.loads(request.body)
-            phone_number = data.get('phone_number')
-            amount = data.get('amount')
-            web_name = "M-FARM"
-            stk_password = base64.b64encode((business_short_code + pass_key + timestamp).encode('utf-8')).decode('utf-8')
+#             data = json.loads(request.body)
+#             phone_number = data.get('phone_number')
+#             amount = data.get('amount')
+#             web_name = "M-FARM"
+#             stk_password = base64.b64encode((business_short_code + pass_key + timestamp).encode('utf-8')).decode('utf-8')
 
-            payload = {
-                "BusinessShortCode": business_short_code,
-                "Password": stk_password,
-                "Timestamp": timestamp,
-                "TransactionType": "CustomerPayBillOnline",
-                "Amount": amount,
-                "PartyA": phone_number,
-                "PartyB": business_short_code,
-                "PhoneNumber": phone_number,
-                "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/",
-                "AccountReference": web_name,
-                "TransactionDesc": "Payment of a ticket",
-            }
+#             payload = {
+#                 "BusinessShortCode": business_short_code,
+#                 "Password": stk_password,
+#                 "Timestamp": timestamp,
+#                 "TransactionType": "CustomerPayBillOnline",
+#                 "Amount": amount,
+#                 "PartyA": phone_number,
+#                 "PartyB": business_short_code,
+#                 "PhoneNumber": phone_number,
+#                 "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/",
+#                 "AccountReference": web_name,
+#                 "TransactionDesc": "Payment of a ticket",
+#             }
 
-            response = requests.post(
-                "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-                headers=headers,
-                json=payload,
-            )
+#             response = requests.post(
+#                 "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+#                 headers=headers,
+#                 json=payload,
+#             )
 
-            return JsonResponse(response.json())
+#             return JsonResponse(response.json())
 
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        except requests.exceptions.RequestException as e:
-            return JsonResponse({'error': f'Request error: {e}'}, status=500)
-        except Exception as e:
-            print(f"Error in stkpush: {e}")
-            return JsonResponse({'error': 'Internal server error'}, status=500)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+#         except requests.exceptions.RequestException as e:
+#             return JsonResponse({'error': f'Request error: {e}'}, status=500)
+#         except Exception as e:
+#             print(f"Error in stkpush: {e}")
+#             return JsonResponse({'error': 'Internal server error'}, status=500)
 
-    @csrf_exempt
-    def mpesa_callback(request):
-        if request.method == 'POST':
-            try:
-                callback_data = json.loads(request.body)
-                print("M-Pesa callback received:", callback_data)
+#     @csrf_exempt
+#     def mpesa_callback(request):
+#         if request.method == 'POST':
+#             try:
+#                 callback_data = json.loads(request.body)
+#                 print("M-Pesa callback received:", callback_data)
 
-                result_code = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
-                result_desc = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultDesc")
+#                 result_code = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
+#                 result_desc = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultDesc")
 
-                if result_code == 0:
-                    print("Payment successful: ", result_desc)
-                    return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
-                else:
-                    print(f"Payment failed: {result_desc}")
-                    return JsonResponse({"ResultCode": 1, "ResultDesc": "Payment failed"})
+#                 if result_code == 0:
+#                     print("Payment successful: ", result_desc)
+#                     return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
+#                 else:
+#                     print(f"Payment failed: {result_desc}")
+#                     return JsonResponse({"ResultCode": 1, "ResultDesc": "Payment failed"})
 
-            except Exception as e:
-                print(f"Error processing M-Pesa callback: {e}")
-                return JsonResponse({"ResultCode": 1, "ResultDesc": "Error"})
-        else:
-            return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid request method"})
+#             except Exception as e:
+#                 print(f"Error processing M-Pesa callback: {e}")
+#                 return JsonResponse({"ResultCode": 1, "ResultDesc": "Error"})
+#         else:
+#             return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid request method"})

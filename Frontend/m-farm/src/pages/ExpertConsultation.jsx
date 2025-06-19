@@ -16,7 +16,7 @@ const ExpertConsultation = () => {
   const chatEndRef = useRef(null);
   const navigate = useNavigate();
 
-  // Mock expert data (replace with API call later)
+  
   const experts = [
     { id: 1, name: 'Dr. Kamau', specialty: 'Crop Disease Management', rate: 'KES 500' },
     { id: 2, name: 'Prof. Achieng', specialty: 'Soil Fertility', rate: 'KES 500' },
@@ -25,21 +25,11 @@ const ExpertConsultation = () => {
   // Check authentication status
   const isAuthenticated = () => {
     const token = localStorage.getItem('token');
-    return !!token; // Return true if token exists
-    // Optionally, verify token with backend:
-    /*
-    try {
-      const response = await fetch('http://localhost:8000/accounts/api/v1/verify-token/', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.ok;
-    } catch {
-      return false;
-    }
-    */
+    return !!token; 
+
   };
 
-  // Scroll to bottom of chat
+ 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
@@ -60,38 +50,50 @@ const ExpertConsultation = () => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    // Add user message
+   
     setChatMessages([...chatMessages, { text: chatInput, isUser: true }]);
     setIsChatLoading(true);
+    setChatInput(''); 
 
     try {
-      // Replace with your AI API endpoint (e.g., xAI Grok or Django proxy)
+      
       const response = await fetch('http://localhost:8000/mfarm/api/v1/ai-chat/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Add Authorization if endpoint is protected
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+         
         },
         body: JSON.stringify({ prompt: chatInput }),
       });
+
+     
+      if (!response.ok) {
+        const errorData = await response.json();
+       
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      const aiResponse = data.choices?.[0]?.message?.content || data.error || 'Sorry, I couldn’t process that.';
+
+   
+      const aiResponse = data.response || 'Sorry, I couldn’t process that. Please try again.';
 
       setChatMessages(prev => [...prev, { text: aiResponse, isUser: false }]);
     } catch (error) {
       console.error('AI API error:', error);
+     
       setChatMessages(prev => [
         ...prev,
-        { text: 'Error connecting to AI assistant. Please try again.', isUser: false },
+        { text: `Error connecting to AI assistant: ${error.message}. Please try again.`, isUser: false },
       ]);
     } finally {
       setIsChatLoading(false);
-      setChatInput('');
+    
     }
   };
 
   const handlePayment = () => {
+   
     alert(`Payment of ${selectedExpert?.rate} to M-Pesa for ${selectedExpert?.name} consultation confirmed!`);
     setModalVisible(false);
     setBookingDate('');

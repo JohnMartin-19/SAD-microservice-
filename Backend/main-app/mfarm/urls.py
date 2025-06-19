@@ -9,9 +9,9 @@ urlpatterns = [
     path('api/v1/myproducts/', LoggedInUserProductListView.as_view(), name='logged_in_user_product_list'),
     path('api/v1/myorders/', LoggedInUserOrderListView.as_view(), name='order_list'),
     path('api/v1/revenue/', RevenueView.as_view(), name='revenue'),
-    path('api/v1/ai-chat/', ai_chat, name='ai_chat'),
+    path('api/v1/ai-chat/', ai_chat_endpoint, name='ai_chat'),
     path('api/v1/cart/', CartView.as_view(), name='cart'),
     path('api/v1/checkout/', CheckoutView.as_view(), name='checkout'),
     path('api/v1/send-receipt/', SendReceiptView.as_view(), name='send-receipt'),
-    path('api/v1/mpesa/stk-push/', STKPushAPIView.as_view(), name='STK Push')
+    # path('api/v1/mpesa/stk-push/', STKPushAPIView.as_view(), name='STK Push')
 ]

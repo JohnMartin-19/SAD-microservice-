@@ -298,6 +298,8 @@ const Checkout = () => {
 
   return (
     <div className="text-gray-800">
+      <br />
+      <br />
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
       <ToastContainer position="top-right" autoClose={3000} />
 

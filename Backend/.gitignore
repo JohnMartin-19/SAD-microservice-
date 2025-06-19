@@ -1,0 +1,4 @@
+# Backend/.gitignore
+main-app/.env
+user-service/.env
+payment-service/.env

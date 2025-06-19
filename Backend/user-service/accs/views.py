@@ -189,3 +189,5 @@ class UserDetailAPIView(APIView):
             return Response(serializer.data)
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
+        
+        

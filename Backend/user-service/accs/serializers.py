@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import CustomUser
+from .models import *
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,3 +29,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'first_name', 'phone', 'bio', 'location', 'photo']
         read_only_fields = ['id', 'username']  # block changing username
+        
+class ConsultantSerializer(serializers.ModelSerializer):
+    class Meta:
+        models = Consultant
+        fields = ['id','name','specialty','booked_date','cost']

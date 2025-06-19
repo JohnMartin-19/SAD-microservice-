@@ -149,7 +149,8 @@ const Marketplace = () => {
     
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
-
+      <br />
+      <br />
       <motion.div
         className="container py-5 mx-auto"
         style={{ maxWidth: '60%' }}

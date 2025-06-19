@@ -231,7 +231,8 @@ const FarmerDashboard = () => {
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
       <ToastContainer position="top-right" autoClose={3000} />
-
+      <br />
+      <br />
       {/* Main Content */}
       <motion.div
         className="container py-5"

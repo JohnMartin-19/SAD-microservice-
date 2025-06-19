@@ -197,7 +197,7 @@ class ConsultantViewSet(viewsets.ModelViewSet):
     """
     queryset = Consultant.objects.all()
     serializer_class = ConsultantSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [AllowAny]
     
     def book_consultation(self,request,pk=None):
         consultant = self.get_object()

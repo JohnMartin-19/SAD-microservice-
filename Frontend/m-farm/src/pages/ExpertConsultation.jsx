@@ -16,18 +16,47 @@ const ExpertConsultation = () => {
   const chatEndRef = useRef(null);
   const navigate = useNavigate();
 
-  
-  const experts = [
-    { id: 1, name: 'Dr. Kamau', specialty: 'Crop Disease Management', rate: 'KES 500' },
-    { id: 2, name: 'Prof. Achieng', specialty: 'Soil Fertility', rate: 'KES 500' },
-  ];
+  // State to hold consultants fetched from the API
+  const [experts, setExperts] = useState([]);
+  const [isExpertsLoading, setIsExpertsLoading] = useState(true); // New loading state for experts
+
+ 
 
   // Check authentication status
   const isAuthenticated = () => {
     const token = localStorage.getItem('token');
     return !!token; 
-
   };
+
+
+
+  // Fetch consultants from the API on component mount
+  useEffect(() => {
+    const fetchExperts = async () => {
+      setIsExpertsLoading(true);
+      try {
+        const response = await fetch("http://127.0.0.1:8001/accounts/api/v1/consultants");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Assuming your API returns an array of objects like {id, name, specialty, cost, booked_date}
+        // Map 'cost' to 'rate' to fit existing component logic that uses 'expert.rate'
+        const fetchedExperts = data.map(expert => ({
+          ...expert,
+          rate: `KES ${expert.cost}` // Ensure 'rate' is derived from 'cost'
+        }));
+        setExperts(fetchedExperts);
+      } catch (error) {
+        console.error('Error fetching experts:', error);
+        toast.error('Failed to load expert consultants. Please try again later.');
+      } finally {
+        setIsExpertsLoading(false);
+      }
+    };
+
+    fetchExperts();
+  }, []); // Empty dependency array means this runs once on mount
 
  
   useEffect(() => {
@@ -56,7 +85,7 @@ const ExpertConsultation = () => {
     setChatInput(''); 
 
     try {
-      
+      // Note: This endpoint 'http://localhost:8000/mfarm/api/v1/ai-chat/' remains unchanged as per your instruction.
       const response = await fetch('http://localhost:8000/mfarm/api/v1/ai-chat/', {
         method: 'POST',
         headers: {
@@ -94,6 +123,7 @@ const ExpertConsultation = () => {
 
   const handlePayment = () => {
    
+    // This uses 'selectedExpert?.rate' as per your original code
     alert(`Payment of ${selectedExpert?.rate} to M-Pesa for ${selectedExpert?.name} consultation confirmed!`);
     setModalVisible(false);
     setBookingDate('');
@@ -112,25 +142,32 @@ const ExpertConsultation = () => {
         <h2 className="display-6 fw-semibold text-center mb-5 text-success">
           Consult an Expert
         </h2>
-        <div className="row row-cols-1 row-cols-md-2 g-4 mb-5">
-          {experts.map(expert => (
-            <div key={expert.id} className="col">
-              <div className="card h-100 shadow-sm border-0 text-center">
-                <div className="card-body">
-                  <h3 className="card-title fw-semibold text-dark">{expert.name}</h3>
-                  <p className="card-text text-muted">{expert.specialty}</p>
-                  <p className="card-text text-muted">{expert.rate}</p>
-                  <button
-                    className="btn btn-success shadow-sm w-100"
-                    onClick={() => handleBookNow(expert)}
-                  >
-                    Book Now
-                  </button>
+        {isExpertsLoading ? (
+          <div className="text-center text-muted">Loading expert consultants...</div>
+        ) : experts.length === 0 ? (
+          <div className="text-center text-muted">No expert consultants available at the moment.</div>
+        ) : (
+          <div className="row row-cols-1 row-cols-md-2 g-4 mb-5">
+            {experts.map(expert => (
+              <div key={expert.id} className="col">
+                <div className="card h-100 shadow-sm border-0 text-center">
+                  <div className="card-body">
+                    <h3 className="card-title fw-semibold text-dark">{expert.name}</h3>
+                    <p className="card-text text-muted">{expert.specialty}</p>
+                    {/* Displays rate from the fetched data, which is derived from 'cost' */}
+                    <p className="card-text text-muted">{expert.rate}</p>
+                    <button
+                      className="btn btn-success shadow-sm w-100"
+                      onClick={() => handleBookNow(expert)}
+                    >
+                      Book Now
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
           <br />
           <br />
           <br />
@@ -142,7 +179,7 @@ const ExpertConsultation = () => {
           <div className="card-body d-flex flex-column" style={{ height: '400px' }}>
             <div
               className="flex-grow-1 overflow-auto mb-3 p-3"
-              style={{ backgroundColor: '#f9f9f9', borderRadius: '5px' }}
+              style={{ backgroundColor: '#f9f9f9', borderRadius: '5px'} }
             >
               {chatMessages.map((msg, index) => (
                 <div
@@ -177,7 +214,7 @@ const ExpertConsultation = () => {
               />
               <button type="submit" className="btn btn-success shadow-sm" disabled={isChatLoading}>
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
                   width="16"
                   height="16"
                   fill="currentColor"
@@ -215,7 +252,7 @@ const ExpertConsultation = () => {
                   required
                 />
               </div>
-              <p className="text-muted">Cost: {selectedExpert?.rate}</p>
+              <p className="text-muted">Cost: {selectedExpert?.rate}</p> {/* Uses 'rate' as per your original code */}
               <div className="d-flex gap-2">
                 <button className="btn btn-success shadow-sm w-100" onClick={handlePayment}>
                   Pay with M-Pesa

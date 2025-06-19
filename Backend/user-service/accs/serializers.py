@@ -32,7 +32,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
 class ConsultantSerializer(serializers.ModelSerializer):
     class Meta:
-        models = Consultant
+        model = Consultant
         fields = ['id','name','specialty','booked_date','cost']
         read_only_fields = ['id','booked_date']
         

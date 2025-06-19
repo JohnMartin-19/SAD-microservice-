@@ -11,3 +11,9 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
     
+    
+    class Consultant(models.Model):
+        name = models.CharField(max_length=250,null=False, blank=False)
+        specialty = models.CharField(max_length=70, null=False, blank=False)
+        booked_date = models.DateField(null=True, blank=True)
+        cost = models.PositiveIntegerField()

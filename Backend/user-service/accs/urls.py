@@ -15,7 +15,8 @@ urlpatterns = [
     path('api/v1/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/profile/', UserProfileAPIView.as_view(), name='user_profile'),
-     path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/v1/consultation/',ConsultantViewSet, name='consultation'),
+    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
     # Swagger UI
     path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     # ReDoc (optional)

@@ -17,3 +17,6 @@ class Consultant(models.Model):
     specialty = models.CharField(max_length=70, null=False, blank=False)
     booked_date = models.DateField(null=True, blank=True)
     cost = models.PositiveIntegerField()
+    
+    def __str__(self):
+        return f"{self.name} ({self.specialty})"

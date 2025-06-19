@@ -34,3 +34,7 @@ class ConsultantSerializer(serializers.ModelSerializer):
     class Meta:
         models = Consultant
         fields = ['id','name','specialty','booked_date','cost']
+        read_only_fields = ['id','booked_date']
+        
+class BookConsultantSerializer(serializers.Serializer):
+    booking_date = serializers.DateField(required=True)

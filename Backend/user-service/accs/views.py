@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,viewsets
 from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy
 from .serializers import *
@@ -191,3 +191,27 @@ class UserDetailAPIView(APIView):
             return Response({'error': 'User not found'}, status=404)
         
         
+class ConsultantViewSet(viewsets.ModelViewSet):
+    """_
+    API VIEW for booking consultation
+    """
+    queryset = Consultant.objects.all()
+    serializer_class = ConsultantSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def book_consultation(self,request,pk=None):
+        consultant = self.get_object()
+        serializer = BookConsultantSerializer(data = request.data)
+        
+        if serializer.is_valid():
+            booking_date = serializer.validated_data['booking_date']
+            
+            if consultant.booked_date == booking_date:
+                return Response(
+                    {
+                        "detail":'This consultant has already been booked for the selected date.Please choose another consultant or date'
+                    },status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            return Response (self.get_serializer(consultant).data,status=status.HTTP_200_OK)
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)

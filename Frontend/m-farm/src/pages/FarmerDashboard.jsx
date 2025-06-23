@@ -7,7 +7,6 @@ import { Chart as ChartJS, LineElement, PointElement, LinearScale, Title, Toolti
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
 // Register Chart.js components
 ChartJS.register(LineElement, PointElement, LinearScale, Title, Tooltip, Legend, CategoryScale);
 
@@ -154,7 +153,7 @@ const FarmerDashboard = () => {
       setTimeout(() => navigate('/login'), 3000);
       return;
     }
-  
+
     const formDataToSend = new FormData();
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
@@ -164,7 +163,7 @@ const FarmerDashboard = () => {
     if (formData.image) {
       formDataToSend.append('image', formData.image);
     }
-  
+
     try {
       let response = await fetch('http://localhost:8000/mfarm/api/v1/products/', {
         method: 'POST',
@@ -173,7 +172,7 @@ const FarmerDashboard = () => {
         },
         body: formDataToSend,
       });
-  
+
       if (response.status === 401) {
         const newToken = await refreshToken();
         if (newToken) {
@@ -188,7 +187,7 @@ const FarmerDashboard = () => {
           throw new Error('Token refresh failed');
         }
       }
-  
+
       if (response.ok) {
         const newProduct = await response.json();
         setListings([...listings, newProduct]);
@@ -204,7 +203,8 @@ const FarmerDashboard = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  // New function to perform the actual delete operation
+  const confirmDelete = async (id) => {
     const token = localStorage.getItem('token');
     try {
       const response = await fetch(`http://localhost:8000/mfarm/api/v1/myproducts/delete/${id}/`, {
@@ -219,7 +219,9 @@ const FarmerDashboard = () => {
         setListings(listings.filter(listing => listing.id !== id));
         toast.success('Product deleted successfully!');
       } else {
-        toast.error('Failed to delete product.');
+        const errorData = await response.json();
+        console.error('Failed to delete product:', errorData);
+        toast.error(errorData.detail || 'Failed to delete product.');
       }
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -227,10 +229,54 @@ const FarmerDashboard = () => {
     }
   };
 
+  // Modified handleDelete to show confirmation
+  const handleDelete = (id) => {
+    toast.warn(
+      ({ closeToast }) => (
+        <div>
+          <p>Are you sure you want to delete this product?</p>
+          <button
+            className="btn btn-danger btn-sm me-2"
+            onClick={() => {
+              confirmDelete(id);
+              closeToast(); // Close the toast after confirming
+            }}
+          >
+            Yes, Delete
+          </button>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={closeToast} // Close the toast if canceled
+          >
+            Cancel
+          </button>
+        </div>
+      ),
+      {
+        autoClose: false, // Don't auto-close the confirmation toast
+        closeOnClick: false, // Prevent closing when clicking on the toast itself
+        draggable: false, // Prevent dragging the toast
+        position: "top-center", // Or "top-right" or "bottom-center"
+        toastId: `confirm-delete-${id}` // Unique ID for each confirmation toast
+      }
+    );
+  };
+
   return (
     <div className="text-gray-800">
       <Header isOpen={isMenuOpen} toggleMenu={() => setIsMenuOpen(!isMenuOpen)} />
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* Ensure ToastContainer can render toast.warn content */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000} // Default autoClose for success/error
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeButton={false} // We will handle closing for confirmation toasts
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <br />
       <br />
       {/* Main Content */}

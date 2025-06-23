@@ -42,7 +42,7 @@ class Product(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name} ({self.category}) - {self.user.username}"
+        return f"{self.name} ({self.category}) - {self.user_username}"
 
 
 

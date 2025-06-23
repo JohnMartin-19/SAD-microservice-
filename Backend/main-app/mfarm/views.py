@@ -129,7 +129,26 @@ class LoggedInUserProductListView(APIView):
         products = Product.objects.filter(user_username=request.user.username)
         serializer = ProductSerializer(products, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+class LoggedInUserProductDeleteView(APIView):
+    """
+    API view for a farmer to delete their own product
+    """
+    
+    permission_classes = [IsAuthenticated]
+    
+    
+    def delete(self,request,pk):
+        try:
+            product = Product.objects.get(pk=pk)
+            print('Product to be deleted:', product)
+        except Product.DoesNotExist:
+            return Response({"detail":"Product not Found"},status=status.HTTP_404_NOT_FOUND)
 
+        if product.user_username != request.user.username:
+            return Response({"detail":"You do not have permission to delete this product"})
+        product.delete()
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
 class LoggedInUserOrderListView(APIView):
     permission_classes = [IsAuthenticated]
 

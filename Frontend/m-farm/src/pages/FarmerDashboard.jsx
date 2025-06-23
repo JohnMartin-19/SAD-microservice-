@@ -207,7 +207,7 @@ const FarmerDashboard = () => {
   const handleDelete = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`http://localhost:8000/mfarm/api/v1/myproducts/${id}/delete/`, {
+      const response = await fetch(`http://localhost:8000/mfarm/api/v1/myproducts/delete/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

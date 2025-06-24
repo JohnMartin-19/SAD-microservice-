@@ -384,9 +384,13 @@ const Header = ({ isOpen, toggleMenu }) => {
                 <FaUserPlus />
                 <NavLinkContent>Sign Up</NavLinkContent>
               </Link>
+              <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+              <p style={{color:'white'}}>version 1.0</p>
             </>
           )}
         </Nav>
+       
+       
       </HeaderWrapper>
 
       {isLoggingOut && (

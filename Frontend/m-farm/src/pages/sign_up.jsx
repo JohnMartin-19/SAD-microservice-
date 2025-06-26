@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from '../components/Header';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Styled Components (existing ones)
+
 const FormWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -167,18 +167,16 @@ const Signup = () => {
     }
   };
 
-  // --- New: Social Login Handlers ---
+  // ---  social login
   const handleSocialLogin = (provider) => {
-    // This URL will depend on your Django backend configuration.
-    // Assuming django-allauth default URLs.
-    const socialAuthUrl = `http://localhost:8001/accounts/${provider}/login/`;
-    window.location.href = socialAuthUrl; // Redirect to the backend's social auth initiation
+   
+    const socialAuthUrl = `http://localhost:8001/accounts/auth/${provider}/login/`;
+    window.location.href = socialAuthUrl; 
   };
 
-  // --- New: Effect to handle redirect from social login ---
-  React.useEffect(() => {
-    // This effect runs when the component mounts or updates.
-    // It checks if the URL contains tokens (after a successful social login redirect).
+
+  useEffect(() => {
+   
     const params = new URLSearchParams(window.location.search);
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
@@ -187,15 +185,15 @@ const Signup = () => {
       localStorage.setItem('token', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
       toast.success('Logged in successfully with social account!');
-      navigate('/dashboard'); // Or wherever you want to redirect after login
+      navigate('/dashboard'); 
     }
-    // You might also want to handle errors from social login redirects here
+   
     const socialError = params.get('error');
     if (socialError) {
       setError(`Social login failed: ${socialError}`);
     }
 
-    // Clean up URL parameters to prevent re-processing on subsequent renders
+    
     if (accessToken || refreshToken || socialError) {
         window.history.replaceState({}, document.title, window.location.pathname);
     }

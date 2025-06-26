@@ -92,6 +92,63 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+SITE_ID = 1
+
+#all auth settings
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
+
+#social auth specififc setitngs
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+#define the social auth providers
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google':{
+        'APP':{
+            'client_id':os.getenv('GOOGLE_CLIENT_ID'),
+            "secret":os.getenv('GOOGLE_CLIENT_SECRET'),
+        },
+        'SCOPE':[
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS':{
+            'access_type':'online',
+        }
+    },
+    'facebook':{
+        "APP":{
+            'client_id':'FACEBOOK_CLIENT_ID',
+            'secret':'FACEBOOK_CLIENT_SECRET',
+        },
+        'METHOD':'oauth2',
+        'SCOPE':[
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS':{
+            'auth_type':'reauthenticate',
+        }
+    },
+    'github':{
+        'APP':{
+            'client_id':'GITHUB_CLIENT_ID',
+            'secret':'GITHUB_CLIENT_SECRET',
+        },
+        'SCOPE':[
+            'user:email',
+            'read:ser',
+        ]
+    }
+}
+
+
 ROOT_URLCONF = 'accounts.urls'
 
 TEMPLATES = [
@@ -152,7 +209,7 @@ LOGGING = {
 }
 
 
-# Password validation
+# password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -192,6 +249,16 @@ REST_FRAMEWORK = {
     },
 }
 
+REST_AUTH = {
+    'USE_JWT':True,
+    'JWT_AUTH_HTTPONLY':False,
+    'JWT_AUTH_COOKIE':'access_token',
+    'JWT_AUTH_REFRESH_COOKIE':'refrest_token',
+    'SOCIAL_ACCOUNT_ADAPTER':'accounts.accounts.adapter.CustomSocialAccountAdapter',
+}
+
+SOCIALACCOUNT_LOGIN_REDIRECT_URL = 'http://localhost:3000/signup'
+
 # JWT settings
 from datetime import timedelta
 
@@ -202,6 +269,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'UPDATE_LAST_LOGIN':True,
 }
 
 # Internationalization

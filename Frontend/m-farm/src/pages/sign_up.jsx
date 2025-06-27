@@ -170,7 +170,7 @@ const Signup = () => {
   // ---  social login
   const handleSocialLogin = (provider) => {
    
-    const socialAuthUrl = `http://localhost:8001/accounts/auth/${provider}/login/`;
+    const socialAuthUrl = `http://localhost:8001/auth/${provider}/login/`;
     window.location.href = socialAuthUrl; 
   };
 

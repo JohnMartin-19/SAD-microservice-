@@ -37,15 +37,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
        
         authenticated_user = serializer.user
 
-        # # --- Debugging authenticated_user ---
-        # logger.info(f"--- Debugging Authenticated User in CustomTokenObtainPairView ---")
-        # logger.info(f"Authenticated user object: {authenticated_user}")
-        # logger.info(f"Is user authenticated? {authenticated_user.is_authenticated}")
-        # logger.info(f"User ID from authenticated_user: '{getattr(authenticated_user, 'id', 'N/A')}'")
-        # logger.info(f"User username from authenticated_user: '{getattr(authenticated_user, 'username', 'N/A')}'")
-        # logger.info(f"User PK from authenticated_user: '{getattr(authenticated_user, 'pk', 'N/A')}'")
-        # # --- End Debugging ---
-
 
         if not authenticated_user or not authenticated_user.is_authenticated:
             logger.error("Authenticated user object is invalid or not authenticated after serializer validation.")

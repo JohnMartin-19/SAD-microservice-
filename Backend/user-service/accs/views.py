@@ -9,14 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
 import redis
 import os
-
-
-# user-service/accs/views.py
-import redis
-import os
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
-from rest_framework.response import Response
 import logging
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -47,7 +40,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         # calc expiration time
         access_token_lifetime = settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=60))
-        expires_at_utc = datetime.utcnow() + access_token_lifetime # JWT exp is typically UTC timestamp
+        expires_at_utc = datetime.utcnow() + access_token_lifetime 
 
         # konnect to Redis
         redis_client = redis.Redis(

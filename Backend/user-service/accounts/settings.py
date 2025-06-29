@@ -52,6 +52,9 @@ CORS_ALLOW_HEADERS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",  
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -303,3 +306,68 @@ MEDIA_ROOT = BASE_DIR / "static/uploads"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# settings.py
+
+UNFOLD = {
+    "SITE_HEADER": "M-Farm Accounts Admin Panel",
+    "SITE_TITLE": "M-Farm Admin",
+    "INDEX_TITLE": "Welcome to the Accounts Admin Dashboard",
+    "UNFOLD_LOGO": "/static/img/my_logo.svg",
+    "UNFOLD_FAVICONS": [
+        lambda request: {"href": "/static/img/favicon.ico", "sizes": "16x16", "type": "image/x-icon"}
+    ],
+    # "COLORS": {
+    #     "primary": "#0D7E22", 
+        
+    # },
+    "DARK_MODE_ENABLED": True, # Enable/disable dark mode switcher
+    "SIDEBAR": {
+        "show_search": True, # Show search box in sidebar
+        "show_all_applications": True, # Show all apps in sidebar
+        "navigation": [
+            {
+                "title": "Navigation",
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "dashboard", # Material Symbols icon name
+                        "link": "admin:index",
+                    },
+                    {
+                        "title": "My Custom Page",
+                        "icon": "auto_awesome",
+                        "link": "/admin/my_custom_page/", # Link to a custom admin URL
+                    },
+                    # Add more items or groups of items
+                    {
+                        "title": "App Management",
+                        "separator": True, # Adds a separator above this section
+                        "items": [
+                            {
+                                "title": "Products",
+                                "icon": "shopping_bag",
+                                "link": "admin:myapp_product_changelist", # Format: admin:appname_modelname_changelist
+                            },
+                            {
+                                "title": "Categories",
+                                "icon": "category",
+                                "link": "admin:myapp_category_changelist",
+                            },
+                        ]
+                    }
+                ],
+            },
+        ],
+    },
+    # # Add custom CSS or JS globally
+    # "STYLES": [
+    #     lambda request: static("css/my_custom_admin.css"),
+    # ],
+    # "SCRIPTS": [
+    #     lambda request: static("js/my_custom_admin.js"),
+    # ],
+    # # You can also configure a DASHBOARD_CALLBACK to pass custom data to the admin dashboard
+    # # "DASHBOARD_CALLBACK": "path.to.your.dashboard_callback_function",
+}

@@ -14,6 +14,9 @@ ALLOWED_HOSTS = ['*']
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 INSTALLED_APPS = [
+    "unfold",  
+    "unfold.contrib.filters", 
+    "unfold.contrib.forms",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

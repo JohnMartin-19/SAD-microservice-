@@ -25,6 +25,11 @@ from drf_spectacular.views import (
 )
 
 
+admin.site.site_header = "M-Farm Admin"  # Text to put in each page's <h1> (and above login form).
+admin.site.site_title = "M-Farm Portal"   # Text to put at the end of each page's <title>.
+admin.site.index_title = "Welcome M-Farm Administration" # Text to put at the top of the admin index page.
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('mfarm/',include('mfarm.urls')),

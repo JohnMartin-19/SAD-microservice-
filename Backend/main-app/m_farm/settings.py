@@ -14,6 +14,7 @@ ALLOWED_HOSTS = ['*']
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 INSTALLED_APPS = [
+    'jazzmin',
     "unfold",  
     "unfold.contrib.filters", 
     "unfold.contrib.forms",
@@ -30,6 +31,9 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'mfarm.apps.MfarmConfig',
 ]
+JAZZMIN_UI_TWEAKS = {
+    "theme": "sketchy",
+}
 
 MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',

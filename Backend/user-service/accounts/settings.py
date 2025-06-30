@@ -52,6 +52,7 @@ CORS_ALLOW_HEADERS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     "unfold",  
     "unfold.contrib.filters",
     "unfold.contrib.forms",
@@ -81,6 +82,10 @@ INSTALLED_APPS = [
     #local apps
     "accs.apps.AccsConfig",
 ]
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "slate",
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

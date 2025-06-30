@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'mfarm.apps.MfarmConfig',
 ]
 JAZZMIN_UI_TWEAKS = {
-    "theme": "sketchy",
+    "theme": "simplex",
 }
 
 MIDDLEWARE = [

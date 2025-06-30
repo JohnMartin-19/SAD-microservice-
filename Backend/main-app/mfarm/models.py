@@ -1,23 +1,23 @@
 from django.db import models
 
 # Define categories as a tuple of (value, display_name) pairs
-FARM_CATEGORIES = (
-    ('CEREALS', 'Cereals'),  
-    ('LEGUMES', 'Legumes'),  
-    ('ROOTS_TUBERS', 'Roots and Tubers'),  
-    ('VEGETABLES', 'Vegetables'),  
-    ('FRUITS', 'Fruits'),  
-    ('NUTS_SEEDS', 'Nuts and Seeds'),  
-    ('LIVESTOCK', 'Livestock'),  
-    ('LIVESTOCK_PRODUCTS', 'Livestock Products'), 
-    ('POULTRY', 'Poultry'),  
-    ('FISH', 'Fish'),  
-    ('HERBS_SPICES', 'Herbs and Spices'),  
-    ('OIL_CROPS', 'Oil Crops'),  
-    ('FIBER_CROPS', 'Fiber Crops'),  
-    ('FORESTRY_PRODUCTS', 'Forestry Products'),  
-    ('OTHER', 'Other'),  
-)
+# FARM_CATEGORIES = (
+#     ('CEREALS', 'Cereals'),  
+#     ('LEGUMES', 'Legumes'),  
+#     ('ROOTS_TUBERS', 'Roots and Tubers'),  
+#     ('VEGETABLES', 'Vegetables'),  
+#     ('FRUITS', 'Fruits'),  
+#     ('NUTS_SEEDS', 'Nuts and Seeds'),  
+#     ('LIVESTOCK', 'Livestock'),  
+#     ('LIVESTOCK_PRODUCTS', 'Livestock Products'), 
+#     ('POULTRY', 'Poultry'),  
+#     ('FISH', 'Fish'),  
+#     ('HERBS_SPICES', 'Herbs and Spices'),  
+#     ('OIL_CROPS', 'Oil Crops'),  
+#     ('FIBER_CROPS', 'Fiber Crops'),  
+#     ('FORESTRY_PRODUCTS', 'Forestry Products'),  
+#     ('OTHER', 'Other'),  
+# )
 
 class Product(models.Model):
     name = models.CharField(blank=False, max_length=100, null=True)
@@ -27,13 +27,13 @@ class Product(models.Model):
     product_location = models.CharField(blank=True, null=True, max_length=150)
     price = models.PositiveIntegerField(null=True, blank=True)
     user_id = models.CharField(null=True, blank=True,db_index=True)
-    category = models.CharField(
-        max_length=50,
-        choices=FARM_CATEGORIES,
-        blank=True,
-        null=True,
-        default='OTHER'  
-    )
+    # category = models.CharField(
+    #     max_length=50,
+    #     choices=FARM_CATEGORIES,
+    #     blank=True,
+    #     null=True,
+    #     default='OTHER'  
+    # )
     image = models.ImageField(
         upload_to='uploads/',  # Relative to MEDIA_ROOT
         blank=True,
@@ -76,10 +76,10 @@ class ProductOrder(models.Model):
     order = models.ForeignKey(Order, on_delete = models.PROTECT)
     quantity = models.PositiveIntegerField(default=1,null=True, blank=True)
     date_added = models.DateField(auto_created=True, blank=True)
-
+   
 
     def __str__(self):
-        return f"{self.product.name} ({self.quantity}) - {self.order.placed_by}"
+        return f"{self.product.name} ({self.quantity}) - {self.order.placed_by_id}"
     
 
 class Transaction(models.Model):

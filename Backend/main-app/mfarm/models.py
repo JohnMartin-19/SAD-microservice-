@@ -81,13 +81,3 @@ class ProductOrder(models.Model):
     def __str__(self):
         return f"{self.product.name} ({self.quantity}) - {self.order.placed_by_id}"
     
-
-class Transaction(models.Model):
-    order_id = models.ForeignKey(Order, on_delete = models.PROTECT)
-    timestamp = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    payment_method = models.CharField(max_length=100, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.user_id.username} ({self.timestamp}) - {self.payment_method}"
-    
-

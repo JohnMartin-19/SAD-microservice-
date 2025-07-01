@@ -14,7 +14,7 @@ import requests
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
-
+import logging
 from dotenv import load_dotenv
 import os
 
@@ -126,28 +126,59 @@ class STKPushAPIView(APIView):
             return JsonResponse({'error': f'Internal server error: {e}'}, status=500)
 
     @csrf_exempt
-    def mpesa_callback(request):
-        if request.method == 'POST':
-            try:
-                callback_data = json.loads(request.body)
-                print("M-Pesa callback received:", callback_data)
+    def mpesa_callback(self,request):
+        try:
+            data = request.get_json()
+            logging.info(f"Received M-Pesa callback: {json.dumps(data, indent=2)}")
 
-                result_code = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
-                result_desc = callback_data.get("Body", {}).get("stkCallback", {}).get("ResultDesc")
+            # Extract relevant data
+            stk_callback = data.get('Body', {}).get('stkCallback', {})
+            result_code = stk_callback.get('ResultCode')
+            checkout_request_id = stk_callback.get('CheckoutRequestID')
+            result_desc = stk_callback.get('ResultDesc')
 
-                if result_code == 0:
-                    # Implement logic to update Payment status to 'completed' here
-                    # You would need to fetch the payment record using the CheckoutRequestID
-                    # from the callback_data and update its status.
-                    print("Payment successful: ", result_desc)
-                    return JsonResponse({"ResultCode": 0, "ResultDesc": "Success"})
-                else:
-                    # Implement logic to update Payment status to 'failed' here
-                    print(f"Payment failed: {result_desc}")
-                    return JsonResponse({"ResultCode": 1, "ResultDesc": "Payment failed"})
+            if result_code == 0:
+                #successful transaction
+                metadata_items = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+                
+                amount = next((item['Value'] for item in metadata_items if item['Name'] == 'Amount'), None)
+                mpesa_receipt_number = next((item['Value'] for item in metadata_items if item['Name'] == 'MpesaReceiptNumber'), None)
+                transaction_date = next((item['Value'] for item in metadata_items if item['Name'] == 'TransactionDate'), None)
+                phone_number = next((item['Value'] for item in metadata_items if item['Name'] == 'PhoneNumber'), None)
 
-            except Exception as e:
-                print(f"Error processing M-Pesa callback: {e}")
-                return JsonResponse({"ResultCode": 1, "ResultDesc": "Error"})
-        else:
-            return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid request method"})
+                # --- YOUR BUSINESS LOGIC FOR SUCCESSFUL PAYMENT ---
+                # 1. Update your database: Mark transaction as successful, save receipt, amount, etc.
+                #    Example (conceptual):
+                #    transaction = find_transaction_by_checkout_id(checkout_request_id)
+                #    if transaction and not transaction.is_completed: # Implement idempotency check
+                #        transaction.status = 'SUCCESS'
+                #        transaction.mpesa_receipt = mpesa_receipt_number
+                #        transaction.amount_paid = amount
+                #        transaction.completed_at = parse_mpesa_date(transaction_date)
+                #        transaction.save()
+                #        logging.info(f"Transaction {checkout_request_id} successfully processed. Receipt: {mpesa_receipt_number}")
+                #        # 2. Notify user, fulfill order, etc.
+                #    else:
+                #        logging.warning(f"Duplicate or unhandled success callback for {checkout_request_id}")
+
+
+            else:
+                # Failed or cancelled transaction
+                logging.warning(f"Transaction {checkout_request_id} failed. ResultCode: {result_code}, Desc: {result_desc}")
+                # --- YOUR BUSINESS LOGIC FOR FAILED PAYMENT ---
+                # 1. Update your database: Mark transaction as failed/cancelled
+                #    Example (conceptual):
+                #    transaction = find_transaction_by_checkout_id(checkout_request_id)
+                #    if transaction:
+                #        transaction.status = 'FAILED'
+                #        transaction.failure_reason = result_desc
+                #        transaction.save()
+                # 2. Notify user about failure
+
+            # Always return a 200 OK to M-Pesa to acknowledge receipt
+            return jsonify({"ResponseCode": "00000000", "ResponseDesc": "Callback received successfully"}), 200
+
+        except Exception as e:
+            logging.error(f"Error handling M-Pesa callback: {e}", exc_info=True)
+            # Return a non-200 status if there's a critical error to signal M-Pesa to retry
+            return jsonify({"ResponseCode": "99999999", "ResponseDesc": "Internal Server Error"}), 500

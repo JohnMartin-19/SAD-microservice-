@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import * 
+from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
 import json
 import os
@@ -18,7 +19,8 @@ import logging
 from dotenv import load_dotenv
 import os
 from django.core.mail import EmailMultiAlternatives
-
+from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema
 
 load_dotenv()
 

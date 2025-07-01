@@ -19,7 +19,7 @@ import logging
 from dotenv import load_dotenv
 import os
 from django.core.mail import EmailMultiAlternatives
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from drf_spectacular.utils import extend_schema
 
 load_dotenv()
@@ -31,46 +31,18 @@ USER_SERVICE_BASE_URL = os.getenv("USER_SERVICE_BASE_URL", "http://localhost:800
 
 
 class CheckoutView(APIView):
-    permission_classes = [IsAuthenticated] # Assuming DRF authentication setup
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        request={
-            'type': 'object',
-            'properties': {
-                'cart': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'object',
-                        'properties': {
-                            'product_id': {'type': 'integer'},
-                            'quantity': {'type': 'integer', 'minimum': 1},
-                        }, 
-                        'required': ['product_id', 'quantity'],
-                    },
-                },
-                'payment_method': {'type': 'string'},
-               
-                'user_details': { 
-                    'type': 'object',
-                    'properties': {
-                        'name': {'type': 'string'},
-                        'email': {'type': 'string', 'format': 'email'},
-                        'phone': {'type': 'string'},
-                    },
-                },
-                'shipping_address': {
-                    'type': 'object',
-                    'properties': {
-                        'address': {'type': 'string'},
-                        'city': {'type': 'string'},
-                        'postal_code': {'type': 'string'},
-                    },
-                },
-             
-            },
-            'required': ['cart', 'payment_method', 'user_details', 'shipping_address'],
+        request=CheckoutRequestSerializer, 
+        responses={
+            201: MyOrderSerializer, 
+            400: {'description': 'Bad Request', 'type': 'object', 'properties': {'error': {'type': 'string'}}},
+            401: {'description': 'Unauthorized', 'type': 'object', 'properties': {'error': {'type': 'string'}}},
+            404: {'description': 'Not Found', 'type': 'object', 'properties': {'error': {'type': 'string'}}},
+            500: {'description': 'Internal Server Error', 'type': 'object', 'properties': {'error': {'type': 'string'}}},
         },
-        responses={201: MyOrderSerializer, 400: None, 401: None},
+        tags=['Payments'],
         description=(
             "Process checkout and create a pending order. "
             "Communicates with product-service for product details and stock updates."
@@ -96,9 +68,9 @@ class CheckoutView(APIView):
         total_amount = 0
 
         for item in cart:
-            serializer = CartItemSerializer(data=item) 
+            serializer = CartItemInputSerializer(data=item) 
             if not serializer.is_valid():
-                logger.error(f'CartItemSerializer errors: {serializer.errors}')
+                logger.error(f'CartItemInputSerializer errors: {serializer.errors}')
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
             validated_item = serializer.validated_data
@@ -285,6 +257,10 @@ class SendReceiptView(APIView):
 ########################################## PAYMENTS APIS ###########################################
 #### MPESA STK
 class STKPushAPIView(APIView):
+    
+    permission_classes = [AllowAny]
+    
+    
     @staticmethod
     def get_access_token():
         consumer_key = os.getenv("MPESA_CONSUMER_KEY")
@@ -301,7 +277,7 @@ class STKPushAPIView(APIView):
                 "Content-Type": "application/json"
             }
             response = requests.get(url, headers=headers).json()
-            print(response) # Log M-Pesa token response
+            print(response) 
             if "access_token" in response:
                 return response["access_token"]
             else:
@@ -318,7 +294,7 @@ class STKPushAPIView(APIView):
             if not user_id:
                 return Response({'error': 'invalid user'}, status=status.HTTP_400_BAD_REQUEST)
             
-        
+            NGROK_BASE_URL = "https://fbb4-102-219-210-106.ngrok-free.app"
             access_token = self.get_access_token()
             headers = {"Authorization": f"Bearer {access_token}"}
             timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -347,7 +323,7 @@ class STKPushAPIView(APIView):
                 "PartyA": phone_number,
                 "PartyB": business_short_code,
                 "PhoneNumber": phone_number,
-                "CallBackURL": "https://da8e-102-210-40-50.ngrok-free.app/callback/", # Ensure this ngrok URL is active
+                "CallBackURL": f"{NGROK_BASE_URL}/payments/api/v1/mpesa/callback/",
                 "AccountReference": web_name,
                 "TransactionDesc": "Payment of a product",
             }

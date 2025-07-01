@@ -3,7 +3,7 @@ from django.db import models
 class Order(models.Model):
     placed_by_id = models.IntegerField()
     complete = models.BooleanField(default=False)
-    transsaction_id = models.CharField(max_length=100, blank=True, unique=True, null=True)
+    transaction_id = models.CharField(max_length=100, blank=True, unique=True, null=True)
     status = models.CharField(max_length=50, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

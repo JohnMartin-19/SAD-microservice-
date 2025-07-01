@@ -24,10 +24,14 @@ from drf_spectacular.utils import extend_schema
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
+PRODUCT_SERVICE_BASE_URL = os.getenv("PRODUCT_SERVICE_BASE_URL", "http://localhost:8000/api/v1/products/")
+USER_SERVICE_BASE_URL = os.getenv("USER_SERVICE_BASE_URL", "http://localhost:8001/api/v1/users/") # If you need user details from user-service
+
 
 class CheckoutView(APIView):
-    permission_classes = [IsAuthenticated]
-   
+    permission_classes = [IsAuthenticated] # Assuming DRF authentication setup
 
     @extend_schema(
         request={
@@ -40,13 +44,13 @@ class CheckoutView(APIView):
                         'properties': {
                             'product_id': {'type': 'integer'},
                             'quantity': {'type': 'integer', 'minimum': 1},
-                            'price': {'type': 'number'},
-                        },
+                        }, 
                         'required': ['product_id', 'quantity'],
                     },
                 },
                 'payment_method': {'type': 'string'},
-                'user_details': {
+               
+                'user_details': { 
                     'type': 'object',
                     'properties': {
                         'name': {'type': 'string'},
@@ -62,97 +66,157 @@ class CheckoutView(APIView):
                         'postal_code': {'type': 'string'},
                     },
                 },
-                'receipt_image': {'type': 'string', 'format': 'base64'},
+             
             },
             'required': ['cart', 'payment_method', 'user_details', 'shipping_address'],
         },
         responses={201: MyOrderSerializer, 400: None, 401: None},
         description=(
-            "Process checkout, create an order, and send email with receipt image "
-            "provided by the frontend."
+            "Process checkout and create a pending order. "
+            "Communicates with product-service for product details and stock updates."
         )
     )
     def post(self, request):
-        try:
-            if not request.user.is_authenticated:
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'User not authenticated'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        cart = request.data.get('cart', [])
+        payment_method = request.data.get('payment_method', '')
+        user_details = request.data.get('user_details', {})
+        shipping_address = request.data.get('shipping_address', {})
+
+        if not cart:
+            return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+
+        #validate cart items and fetch product details from product-service
+        processed_cart_items = []
+        total_amount = 0
+
+        for item in cart:
+            serializer = CartItemSerializer(data=item) 
+            if not serializer.is_valid():
+                logger.error(f'CartItemSerializer errors: {serializer.errors}')
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            validated_item = serializer.validated_data
+            product_id = validated_item['product_id']
+            quantity = validated_item['quantity']
+
+            # Make API call to product-service to get product details
+            try:
+                # Assuming product-service has an endpoint like /api/v1/products/<id>/
+                product_response = requests.get(f"{PRODUCT_SERVICE_BASE_URL}{product_id}/")
+                product_response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+                product_data = product_response.json()
+
+                if product_data.get('quantity') < quantity:
+                    return Response(
+                        {'error': f"Only {product_data.get('quantity')} of {product_data.get('name')} available"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                processed_cart_items.append({
+                    'product_id': product_id,
+                    'product_name': product_data.get('name'),
+                    'product_price': product_data.get('price'),
+                    'quantity': quantity
+                })
+                total_amount += float(product_data.get('price')) * quantity
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Error fetching product {product_id} from product-service: {e}")
                 return Response(
-                    {'error': 'User not authenticated'},
-                    status=status.HTTP_401_UNAUTHORIZED
+                    {'error': f'Failed to retrieve product details for ID {product_id}. Service unavailable or product not found.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            except Exception as e:
+                logger.error(f"Unexpected error processing cart item: {e}", exc_info=True)
+                return Response(
+                    {'error': f'An unexpected error occurred while processing product {product_id}.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-            cart = request.data.get('cart', [])
-            print('cart data to be sent', cart)
-            payment_method = request.data.get('payment_method', '')
-            print('Payment', payment_method)
-            user_details = request.data.get('user_details', {})
-            print('Usr details', user_details)
-            shipping_address = request.data.get('shipping_address', {})
-            print('Shipping', shipping_address)
+        # 2. Create the Order in payments-service
+        try:
+            order = Order.objects.create(
+                placed_by_id=request.user.id, # Using the ID from the authenticated user
+                complete=False,
+                transaction_id=str(uuid.uuid4()), # Initial internal transaction ID
+                status='Pending', # Initial status
+                name=user_details.get('name', ''),
+                email=user_details.get('email', ''),
+                phone=user_details.get('phone', ''),
+                address=shipping_address.get('address', ''),
+                city=shipping_address.get('city', ''),
+                postal_code=shipping_address.get('postal_code', ''),
+                total_amount=total_amount # Store the calculated total
+            )
 
-            if not cart:
-                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
-
-            validated_cart = []
-            for item in cart:
-                serializer = CartItemSerializer(data=item)
-                if not serializer.is_valid():
-                    print('CartItemSerializer errors:', serializer.errors)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                validated_cart.append(serializer.validated_data)
-                print(f"Item quantity type: {type(item['quantity'])}, validated: {type(serializer.validated_data['quantity'])}")
-
-            order_data = {
-                'placed_by_id': request.user.id,
-                'complete': False,
-                'transaction_id': str(uuid.uuid4()),
-                'status': 'Pending',
-                'quantity': sum(item['quantity'] for item in validated_cart),
-                'name': user_details.get('name', ''),
-                'email': user_details.get('email', ''),
-                'phone': user_details.get('phone', ''),
-                'address': shipping_address.get('address', ''),
-                'city': shipping_address.get('city', ''),
-                'postal_code': shipping_address.get('postal_code', ''),
-                'cart': validated_cart,
-            }
-            serializer = MyOrderSerializer(data=order_data)
-            if serializer.is_valid():
-                order = serializer.save()
-                print('Order created:', order.id)
-
-                total_amount = 0
-                for item in validated_cart:
-                    product = Product.objects.get(id=item['product_id'])
-                    product_quantity = int(product.quantity)
-                    print(f"Product quantity: {product_quantity} (type: {type(product_quantity)}), Requested: {item['quantity']} (type: {type(item['quantity'])})")
-                    if product_quantity < item['quantity']:
-                        order.delete()
-                        return Response(
-                            {'error': f'Only {product_quantity} of {product.name} available'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    product.quantity = product_quantity - item['quantity']
-                    product.save()
-                    print(f"Updated product {product.id} quantity to {product.quantity}")
-                    total_amount += float(product.price) * item['quantity']
-
-                Transaction.objects.create(
-                    user_id=request.user,
-                    order_id=order,
-                    payment_method=payment_method
+            # 3. Create OrderItems for the newly created Order
+            for item_data in processed_cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product_id=item_data['product_id'],
+                    product_name=item_data['product_name'],
+                    product_price=item_data['product_price'],
+                    quantity=item_data['quantity']
                 )
-                print('Transaction created for order:', order.id)
 
-                response_data = serializer.data
-                response_data['total_amount'] = total_amount
-                return Response(response_data, status=status.HTTP_201_CREATED)
-            print('OrderSerializer errors:', serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Product.DoesNotExist:
-            return Response({'error': 'One or more products not found'}, status=status.HTTP_404_NOT_FOUND)
+            # 4. Decrement quantities in product-service (critical step)
+            # This should ideally be part of a distributed transaction or a saga pattern.
+            # For simplicity, we'll do it synchronously here. If this fails, you'd need
+            # to implement compensation logic (e.g., mark order as 'Failed' and restock).
+            for item_data in processed_cart_items:
+                product_id = item_data['product_id']
+                quantity_to_decrement = item_data['quantity']
+                try:
+                    decrement_response = requests.post(
+                        f"{PRODUCT_SERVICE_BASE_URL}{product_id}/decrement_quantity/",
+                        json={'quantity': quantity_to_decrement}
+                    )
+                    decrement_response.raise_for_status()
+                    logger.info(f"Decremented product {product_id} by {quantity_to_decrement}")
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Failed to decrement quantity for product {product_id}: {e}")
+                    # CRITICAL: Handle compensation here. E.g., change order status to 'StockError',
+                    # or initiate a full rollback. For now, we'll mark order as failed.
+                    order.status = 'Stock_Decrement_Failed'
+                    order.save()
+                    return Response(
+                        {'error': f'Failed to reserve stock for product {product_id}. Order cancelled.'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+
+            # 5. Create an initial Payment record (status pending)
+            # This links the payment attempt to the order
+            payment = Payment.objects.create(
+                user_id=request.user.id,
+                order=order,
+                amount=total_amount,
+                status='pending',
+                transaction_id=str(uuid.uuid4()) # Unique ID for this payment attempt
+            )
+            # Link this payment's transaction_id to the Order's transaction_id field
+            order.transaction_id = payment.transaction_id
+            order.save()
+
+
+            serializer = MyOrderSerializer(order) # Serialize the created order
+            response_data = serializer.data
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
         except Exception as e:
-            print('Unexpected error:', str(e))
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f'Error during order creation or stock update: {e}', exc_info=True)
+            # Important: If an error occurs after order creation but before stock decrement,
+            # you might need to clean up the created order and its items.
+            # A robust solution would use a distributed transaction (Saga pattern).
+            if 'order' in locals() and order.pk: # Check if order was created before error
+                order.delete() # Simple rollback for now. In real-world, mark as 'Failed' and use compensation.
+            return Response({'error': 'Failed to process checkout. ' + str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class SendReceiptView(APIView):
     permission_classes = [IsAuthenticated]
@@ -322,60 +386,97 @@ class STKPushAPIView(APIView):
             print(f"Unhandled error in stkpush: {e}")
             return JsonResponse({'error': f'Internal server error: {e}'}, status=500)
 
-    @csrf_exempt
-    def mpesa_callback(self,request):
-        try:
-            data = request.get_json()
-            logging.info(f"Received M-Pesa callback: {json.dumps(data, indent=2)}")
 
-            # Extract relevant data
+class MpesaCallbackView(APIView):
+  
+    def dispatch(self, request, *args, **kwargs):
+        return csrf_exempt(super().dispatch)(request, *args, **kwargs)
+
+    def post(self, request):
+        try:
+            
+            data = request.data 
+            logger.info(f"Received M-Pesa callback: {json.dumps(data, indent=2)}")
+
             stk_callback = data.get('Body', {}).get('stkCallback', {})
             result_code = stk_callback.get('ResultCode')
-            checkout_request_id = stk_callback.get('CheckoutRequestID')
+            checkout_request_id = stk_callback.get('CheckoutRequestID') 
             result_desc = stk_callback.get('ResultDesc')
 
+            # try to find the pending Payment record using the checkout_request_id
+            try:
+                payment = Payment.objects.get(transaction_id=checkout_request_id, status='pending')
+            except Payment.DoesNotExist:
+                logger.error(f"No pending payment found for CheckoutRequestID: {checkout_request_id}")
+                return JsonResponse({"ResponseCode": "00000000", "ResponseDesc": "Callback received but payment not found or already processed"}), 200
+
+           ## #Idempotency check:##### Ensure the payment hasn't been completed already/ Avoid duplicate transactions
+            if payment.status != 'pending':
+                logger.warning(f"Duplicate callback for CheckoutRequestID: {checkout_request_id}. Status: {payment.status}")
+                return JsonResponse({"ResponseCode": "00000000", "ResponseDesc": "Callback already processed"}), 200
+
             if result_code == 0:
-                #successful transaction
+                # handling successful transaction
                 metadata_items = stk_callback.get('CallbackMetadata', {}).get('Item', [])
-                
-                amount = next((item['Value'] for item in metadata_items if item['Name'] == 'Amount'), None)
+
+                mpesa_amount = next((item['Value'] for item in metadata_items if item['Name'] == 'Amount'), None)
                 mpesa_receipt_number = next((item['Value'] for item in metadata_items if item['Name'] == 'MpesaReceiptNumber'), None)
-                transaction_date = next((item['Value'] for item in metadata_items if item['Name'] == 'TransactionDate'), None)
-                phone_number = next((item['Value'] for item in metadata_items if item['Name'] == 'PhoneNumber'), None)
+                transaction_date_str = next((item['Value'] for item in metadata_items if item['Name'] == 'TransactionDate'), None)
+                mpesa_phone_number = next((item['Value'] for item in metadata_items if item['Name'] == 'PhoneNumber'), None)
 
-                # --- YOUR BUSINESS LOGIC FOR SUCCESSFUL PAYMENT ---
-                # 1. Update your database: Mark transaction as successful, save receipt, amount, etc.
-                #    Example (conceptual):
-                #    transaction = find_transaction_by_checkout_id(checkout_request_id)
-                #    if transaction and not transaction.is_completed: # Implement idempotency check
-                #        transaction.status = 'SUCCESS'
-                #        transaction.mpesa_receipt = mpesa_receipt_number
-                #        transaction.amount_paid = amount
-                #        transaction.completed_at = parse_mpesa_date(transaction_date)
-                #        transaction.save()
-                #        logging.info(f"Transaction {checkout_request_id} successfully processed. Receipt: {mpesa_receipt_number}")
-                #        # 2. Notify user, fulfill order, etc.
-                #    else:
-                #        logging.warning(f"Duplicate or unhandled success callback for {checkout_request_id}")
+                # update Payment record to the db
+                payment.status = 'completed'
+                payment.mpesa_receipt_number = mpesa_receipt_number
+                payment.completed_at = timezone.now() 
+                payment.amount = mpesa_amount 
+                payment.save()
+                logger.info(f"Payment {payment.id} for CheckoutRequestID {checkout_request_id} updated to 'completed'. M-Pesa Receipt: {mpesa_receipt_number}")
 
+                # update associated Order record
+                if payment.order:
+                    payment.order.status = 'Paid' 
+                    payment.order.complete = True
+                    payment.order.save()
+                    logger.info(f"Order {payment.order.id} for CheckoutRequestID {checkout_request_id} updated to 'Paid'.")
+                else:
+                    logger.warning(f"Payment {payment.id} has no associated order.")
+
+                # --- Additional Business Logic for SUCCESSFUL PAYMENT ---
+                # This is where you might trigger events for other services, e.g.:
+                # - Send an event to user-service: "UserPaymentCompleted"
+                # - Send an event to a notification-service: "SendOrderConfirmationEmail"
+                # - Send an event to a logistics-service: "StartShippingProcess"
+
+                # If the EmailMultiAlternatives is part of this service, you could
+                # trigger it here, but ideally, email sending would be another service.
+                # Example: send_order_confirmation_email(payment.order)
 
             else:
-                # Failed or cancelled transaction
-                logging.warning(f"Transaction {checkout_request_id} failed. ResultCode: {result_code}, Desc: {result_desc}")
-                # --- YOUR BUSINESS LOGIC FOR FAILED PAYMENT ---
-                # 1. Update your database: Mark transaction as failed/cancelled
-                #    Example (conceptual):
-                #    transaction = find_transaction_by_checkout_id(checkout_request_id)
-                #    if transaction:
-                #        transaction.status = 'FAILED'
-                #        transaction.failure_reason = result_desc
-                #        transaction.save()
-                # 2. Notify user about failure
+                # handle failed or cancelled transaction
+                payment.status = 'failed' if result_code not in [1032] else 'cancelled' 
+                payment.failure_reason = result_desc
+                payment.completed_at = timezone.now() 
+                payment.save()
+                logger.warning(f"Payment {payment.id} for CheckoutRequestID {checkout_request_id} failed. ResultCode: {result_code}, Desc: {result_desc}")
 
-            # Always return a 200 OK to M-Pesa to acknowledge receipt
-            return jsonify({"ResponseCode": "00000000", "ResponseDesc": "Callback received successfully"}), 200
+                # update associated Order record
+                if payment.order:
+                   
+                    payment.order.status = 'Payment Failed'
+                    payment.order.save()
+                    logger.info(f"Order {payment.order.id} for CheckoutRequestID {checkout_request_id} updated to 'Payment Failed'.")
 
+                # --- Additional Business Logic for FAILED PAYMENT ---
+                # - Notify user about payment failure
+                # - Mark product quantities as available again if they were only reserved (more complex)
+                # - Send an event to user-service: "UserPaymentFailed"
+
+            #return a 200 OK to M-Pesa to acknowledge receipt
+            return JsonResponse({"ResponseCode": "00000000", "ResponseDesc": "Callback received successfully"}), 200
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in M-Pesa callback: {e}", exc_info=True)
+            return JsonResponse({"ResponseCode": "99999999", "ResponseDesc": "Invalid JSON payload"}, status=400)
         except Exception as e:
-            logging.error(f"Error handling M-Pesa callback: {e}", exc_info=True)
-            # Return a non-200 status if there's a critical error to signal M-Pesa to retry
-            return jsonify({"ResponseCode": "99999999", "ResponseDesc": "Internal Server Error"}), 500
+            logger.error(f"Error handling M-Pesa callback: {e}", exc_info=True)
+            return JsonResponse({"ResponseCode": "99999999", "ResponseDesc": "Internal Server Error"}), 500

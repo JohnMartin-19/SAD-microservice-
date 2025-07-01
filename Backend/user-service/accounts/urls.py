@@ -18,9 +18,9 @@ from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 
-admin.site.site_header = "M-Farm Accounts Admin"  # Text to put in each page's <h1> (and above login form).
-admin.site.site_title = "M-Farm Accounts Portal"   # Text to put at the end of each page's <title>.
-admin.site.index_title = "Welcome M-Farm Accounts Administration" # Text to put at the top of the admin index page.
+admin.site.site_header = "M-Farm Accounts Admin"  
+admin.site.site_title = "M-Farm Accounts Portal"   
+admin.site.index_title = "Welcome M-Farm Accounts Administration" 
 
 
 urlpatterns = [

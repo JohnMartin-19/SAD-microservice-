@@ -263,8 +263,7 @@ class CartView(APIView):
                 return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CheckoutView(APIView):
-    permission_classes = [IsAuthenticated]
+
 class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
    

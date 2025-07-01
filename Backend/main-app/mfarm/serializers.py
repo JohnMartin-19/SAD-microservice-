@@ -90,13 +90,13 @@ class MyOrderSerializer(serializers.ModelSerializer):
             )
         return order
 
-class TransactionSerializer(serializers.ModelSerializer):
-    user_id = serializers.StringRelatedField()
-    order_id = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
+# class TransactionSerializer(serializers.ModelSerializer):
+#     user_id = serializers.StringRelatedField()
+#     order_id = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
 
-    class Meta:
-        model = Transaction
-        fields = ['id', 'user_id', 'order_id', 'timestamp', 'payment_method']
+#     class Meta:
+#         model = Transaction
+#         fields = ['id', 'user_id', 'order_id', 'timestamp', 'payment_method']
 
 class CartItemSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()

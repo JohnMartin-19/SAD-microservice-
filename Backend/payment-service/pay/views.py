@@ -5,7 +5,7 @@ import base64
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Payment  
+from .models import * 
 from django.views.decorators.csrf import csrf_exempt
 import json
 import os
@@ -17,9 +17,204 @@ from django.db.models import Sum
 import logging
 from dotenv import load_dotenv
 import os
+from django.core.mail import EmailMultiAlternatives
 
 
 load_dotenv()
+
+
+class CheckoutView(APIView):
+    permission_classes = [IsAuthenticated]
+   
+
+    @extend_schema(
+        request={
+            'type': 'object',
+            'properties': {
+                'cart': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'product_id': {'type': 'integer'},
+                            'quantity': {'type': 'integer', 'minimum': 1},
+                            'price': {'type': 'number'},
+                        },
+                        'required': ['product_id', 'quantity'],
+                    },
+                },
+                'payment_method': {'type': 'string'},
+                'user_details': {
+                    'type': 'object',
+                    'properties': {
+                        'name': {'type': 'string'},
+                        'email': {'type': 'string', 'format': 'email'},
+                        'phone': {'type': 'string'},
+                    },
+                },
+                'shipping_address': {
+                    'type': 'object',
+                    'properties': {
+                        'address': {'type': 'string'},
+                        'city': {'type': 'string'},
+                        'postal_code': {'type': 'string'},
+                    },
+                },
+                'receipt_image': {'type': 'string', 'format': 'base64'},
+            },
+            'required': ['cart', 'payment_method', 'user_details', 'shipping_address'],
+        },
+        responses={201: MyOrderSerializer, 400: None, 401: None},
+        description=(
+            "Process checkout, create an order, and send email with receipt image "
+            "provided by the frontend."
+        )
+    )
+    def post(self, request):
+        try:
+            if not request.user.is_authenticated:
+                return Response(
+                    {'error': 'User not authenticated'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            cart = request.data.get('cart', [])
+            print('cart data to be sent', cart)
+            payment_method = request.data.get('payment_method', '')
+            print('Payment', payment_method)
+            user_details = request.data.get('user_details', {})
+            print('Usr details', user_details)
+            shipping_address = request.data.get('shipping_address', {})
+            print('Shipping', shipping_address)
+
+            if not cart:
+                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+
+            validated_cart = []
+            for item in cart:
+                serializer = CartItemSerializer(data=item)
+                if not serializer.is_valid():
+                    print('CartItemSerializer errors:', serializer.errors)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                validated_cart.append(serializer.validated_data)
+                print(f"Item quantity type: {type(item['quantity'])}, validated: {type(serializer.validated_data['quantity'])}")
+
+            order_data = {
+                'placed_by_id': request.user.id,
+                'complete': False,
+                'transaction_id': str(uuid.uuid4()),
+                'status': 'Pending',
+                'quantity': sum(item['quantity'] for item in validated_cart),
+                'name': user_details.get('name', ''),
+                'email': user_details.get('email', ''),
+                'phone': user_details.get('phone', ''),
+                'address': shipping_address.get('address', ''),
+                'city': shipping_address.get('city', ''),
+                'postal_code': shipping_address.get('postal_code', ''),
+                'cart': validated_cart,
+            }
+            serializer = MyOrderSerializer(data=order_data)
+            if serializer.is_valid():
+                order = serializer.save()
+                print('Order created:', order.id)
+
+                total_amount = 0
+                for item in validated_cart:
+                    product = Product.objects.get(id=item['product_id'])
+                    product_quantity = int(product.quantity)
+                    print(f"Product quantity: {product_quantity} (type: {type(product_quantity)}), Requested: {item['quantity']} (type: {type(item['quantity'])})")
+                    if product_quantity < item['quantity']:
+                        order.delete()
+                        return Response(
+                            {'error': f'Only {product_quantity} of {product.name} available'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    product.quantity = product_quantity - item['quantity']
+                    product.save()
+                    print(f"Updated product {product.id} quantity to {product.quantity}")
+                    total_amount += float(product.price) * item['quantity']
+
+                Transaction.objects.create(
+                    user_id=request.user,
+                    order_id=order,
+                    payment_method=payment_method
+                )
+                print('Transaction created for order:', order.id)
+
+                response_data = serializer.data
+                response_data['total_amount'] = total_amount
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            print('OrderSerializer errors:', serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Product.DoesNotExist:
+            return Response({'error': 'One or more products not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print('Unexpected error:', str(e))
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class SendReceiptView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+
+    @extend_schema(
+        request={
+            'type': 'object',
+            'properties': {
+                'order_id': {'type': 'integer'},
+                'email': {'type': 'string', 'format': 'email'},
+                'name': {'type': 'string'},
+                'receipt_image': {'type': 'string', 'format': 'base64'},
+            },
+            'required': ['order_id', 'email', 'name', 'receipt_image'],
+        },
+        responses={200: None, 400: None, 401: None},
+        description="Send an email with the order receipt image."
+    )
+    def post(self, request):
+        try:
+            order_id = request.data.get('order_id')
+            email = request.data.get('email')
+            name = request.data.get('name')
+            receipt_image = request.data.get('receipt_image')
+
+            if not all([order_id, email, name, receipt_image]):
+                return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                Order.objects.get(id=order_id, placed_by=request.user)
+            except Order.DoesNotExist:
+                return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            subject = f'MFarm Order Receipt - Order #{order_id}'
+            from_email = settings.EMAIL_HOST_USER
+            to_email = email
+            text_content = (
+                f"Dear {name},\n\n"
+                f"Thank you for your order! Your receipt is attached.\n\n"
+                f"Order #{order_id}\n"
+                f"Verify your order: http://localhost:8000/mfarm/api/v1/order/verify/{order_id}/\n\n"
+                f"Thank you,\nMFarm Team"
+            )
+
+            email_msg = EmailMultiAlternatives(subject, text_content, from_email, [to_email])
+            try:
+                img_data = base64.b64decode(receipt_image.split(',')[1])
+                email_msg.attach('receipt.png', img_data, 'image/png')
+            except (IndexError, ValueError) as e:
+                print(f"Error decoding receipt image: {e}")
+                return Response({'error': 'Invalid receipt image'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                email_msg.send()
+                print(f"Email sent to {to_email}")
+                return Response({'message': 'Receipt email sent'}, status=status.HTTP_200_OK)
+            except Exception as e:
+                print(f"Error sending email: {str(e)}")
+                return Response({'error': f'Failed to send email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 ########################################## PAYMENTS APIS ###########################################
 #### MPESA STK

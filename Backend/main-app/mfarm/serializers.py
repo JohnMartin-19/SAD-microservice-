@@ -67,28 +67,28 @@ class ProductOrderSerializer(serializers.ModelSerializer):
         model = ProductOrder
         fields = ['product', 'product_id', 'quantity','product_name']
 
-class MyOrderSerializer(serializers.ModelSerializer):
-    productorder = ProductOrderSerializer(many=True, read_only=True)
+# class MyOrderSerializer(serializers.ModelSerializer):
+#     productorder = ProductOrderSerializer(many=True, read_only=True)
   
-    cart = ProductOrderSerializer(many=True, write_only=True)
+#     cart = ProductOrderSerializer(many=True, write_only=True)
 
-    class Meta:
-        model = Order
-        fields = [
-            'id','product', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
-            'name', 'email', 'phone', 'address', 'city', 'postal_code', 'productorder', 'cart'
-        ]
-    def create(self, validated_data):
-        cart = validated_data.pop('cart')
-        order = Order.objects.create(**validated_data)
-        for item in cart:
-            ProductOrder.objects.create(
-                order=order,
-                product=item['product'],
-                quantity=item['quantity'],
-                date_added = datetime.now()
-            )
-        return order
+#     class Meta:
+#         model = Order
+#         fields = [
+#             'id','product', 'date_ordered', 'complete', 'transaction_id', 'quantity', 'status',
+#             'name', 'email', 'phone', 'address', 'city', 'postal_code', 'productorder', 'cart'
+#         ]
+#     def create(self, validated_data):
+#         cart = validated_data.pop('cart')
+#         order = Order.objects.create(**validated_data)
+#         for item in cart:
+#             ProductOrder.objects.create(
+#                 order=order,
+#                 product=item['product'],
+#                 quantity=item['quantity'],
+#                 date_added = datetime.now()
+#             )
+#         return order
 
 # class TransactionSerializer(serializers.ModelSerializer):
 #     user_id = serializers.StringRelatedField()

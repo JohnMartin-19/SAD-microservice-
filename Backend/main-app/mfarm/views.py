@@ -264,134 +264,134 @@ class CartView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CheckoutView(APIView):
-    permission_classes = [IsAuthenticated]
+# class CheckoutView(APIView):
+#     permission_classes = [IsAuthenticated]
    
 
-    @extend_schema(
-        request={
-            'type': 'object',
-            'properties': {
-                'cart': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'object',
-                        'properties': {
-                            'product_id': {'type': 'integer'},
-                            'quantity': {'type': 'integer', 'minimum': 1},
-                            'price': {'type': 'number'},
-                        },
-                        'required': ['product_id', 'quantity'],
-                    },
-                },
-                'payment_method': {'type': 'string'},
-                'user_details': {
-                    'type': 'object',
-                    'properties': {
-                        'name': {'type': 'string'},
-                        'email': {'type': 'string', 'format': 'email'},
-                        'phone': {'type': 'string'},
-                    },
-                },
-                'shipping_address': {
-                    'type': 'object',
-                    'properties': {
-                        'address': {'type': 'string'},
-                        'city': {'type': 'string'},
-                        'postal_code': {'type': 'string'},
-                    },
-                },
-                'receipt_image': {'type': 'string', 'format': 'base64'},
-            },
-            'required': ['cart', 'payment_method', 'user_details', 'shipping_address'],
-        },
-        responses={201: MyOrderSerializer, 400: None, 401: None},
-        description=(
-            "Process checkout, create an order, and send email with receipt image "
-            "provided by the frontend."
-        )
-    )
-    def post(self, request):
-        try:
-            if not request.user.is_authenticated:
-                return Response(
-                    {'error': 'User not authenticated'},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+#     @extend_schema(
+#         request={
+#             'type': 'object',
+#             'properties': {
+#                 'cart': {
+#                     'type': 'array',
+#                     'items': {
+#                         'type': 'object',
+#                         'properties': {
+#                             'product_id': {'type': 'integer'},
+#                             'quantity': {'type': 'integer', 'minimum': 1},
+#                             'price': {'type': 'number'},
+#                         },
+#                         'required': ['product_id', 'quantity'],
+#                     },
+#                 },
+#                 'payment_method': {'type': 'string'},
+#                 'user_details': {
+#                     'type': 'object',
+#                     'properties': {
+#                         'name': {'type': 'string'},
+#                         'email': {'type': 'string', 'format': 'email'},
+#                         'phone': {'type': 'string'},
+#                     },
+#                 },
+#                 'shipping_address': {
+#                     'type': 'object',
+#                     'properties': {
+#                         'address': {'type': 'string'},
+#                         'city': {'type': 'string'},
+#                         'postal_code': {'type': 'string'},
+#                     },
+#                 },
+#                 'receipt_image': {'type': 'string', 'format': 'base64'},
+#             },
+#             'required': ['cart', 'payment_method', 'user_details', 'shipping_address'],
+#         },
+#         responses={201: MyOrderSerializer, 400: None, 401: None},
+#         description=(
+#             "Process checkout, create an order, and send email with receipt image "
+#             "provided by the frontend."
+#         )
+#     )
+#     def post(self, request):
+#         try:
+#             if not request.user.is_authenticated:
+#                 return Response(
+#                     {'error': 'User not authenticated'},
+#                     status=status.HTTP_401_UNAUTHORIZED
+#                 )
 
-            cart = request.data.get('cart', [])
-            print('cart data to be sent', cart)
-            payment_method = request.data.get('payment_method', '')
-            print('Payment', payment_method)
-            user_details = request.data.get('user_details', {})
-            print('Usr details', user_details)
-            shipping_address = request.data.get('shipping_address', {})
-            print('Shipping', shipping_address)
+#             cart = request.data.get('cart', [])
+#             print('cart data to be sent', cart)
+#             payment_method = request.data.get('payment_method', '')
+#             print('Payment', payment_method)
+#             user_details = request.data.get('user_details', {})
+#             print('Usr details', user_details)
+#             shipping_address = request.data.get('shipping_address', {})
+#             print('Shipping', shipping_address)
 
-            if not cart:
-                return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
+#             if not cart:
+#                 return Response({'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST)
 
-            validated_cart = []
-            for item in cart:
-                serializer = CartItemSerializer(data=item)
-                if not serializer.is_valid():
-                    print('CartItemSerializer errors:', serializer.errors)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                validated_cart.append(serializer.validated_data)
-                print(f"Item quantity type: {type(item['quantity'])}, validated: {type(serializer.validated_data['quantity'])}")
+#             validated_cart = []
+#             for item in cart:
+#                 serializer = CartItemSerializer(data=item)
+#                 if not serializer.is_valid():
+#                     print('CartItemSerializer errors:', serializer.errors)
+#                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#                 validated_cart.append(serializer.validated_data)
+#                 print(f"Item quantity type: {type(item['quantity'])}, validated: {type(serializer.validated_data['quantity'])}")
 
-            order_data = {
-                'placed_by_id': request.user.id,
-                'complete': False,
-                'transaction_id': str(uuid.uuid4()),
-                'status': 'Pending',
-                'quantity': sum(item['quantity'] for item in validated_cart),
-                'name': user_details.get('name', ''),
-                'email': user_details.get('email', ''),
-                'phone': user_details.get('phone', ''),
-                'address': shipping_address.get('address', ''),
-                'city': shipping_address.get('city', ''),
-                'postal_code': shipping_address.get('postal_code', ''),
-                'cart': validated_cart,
-            }
-            serializer = MyOrderSerializer(data=order_data)
-            if serializer.is_valid():
-                order = serializer.save()
-                print('Order created:', order.id)
+#             order_data = {
+#                 'placed_by_id': request.user.id,
+#                 'complete': False,
+#                 'transaction_id': str(uuid.uuid4()),
+#                 'status': 'Pending',
+#                 'quantity': sum(item['quantity'] for item in validated_cart),
+#                 'name': user_details.get('name', ''),
+#                 'email': user_details.get('email', ''),
+#                 'phone': user_details.get('phone', ''),
+#                 'address': shipping_address.get('address', ''),
+#                 'city': shipping_address.get('city', ''),
+#                 'postal_code': shipping_address.get('postal_code', ''),
+#                 'cart': validated_cart,
+#             }
+#             serializer = MyOrderSerializer(data=order_data)
+#             if serializer.is_valid():
+#                 order = serializer.save()
+#                 print('Order created:', order.id)
 
-                total_amount = 0
-                for item in validated_cart:
-                    product = Product.objects.get(id=item['product_id'])
-                    product_quantity = int(product.quantity)
-                    print(f"Product quantity: {product_quantity} (type: {type(product_quantity)}), Requested: {item['quantity']} (type: {type(item['quantity'])})")
-                    if product_quantity < item['quantity']:
-                        order.delete()
-                        return Response(
-                            {'error': f'Only {product_quantity} of {product.name} available'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    product.quantity = product_quantity - item['quantity']
-                    product.save()
-                    print(f"Updated product {product.id} quantity to {product.quantity}")
-                    total_amount += float(product.price) * item['quantity']
+#                 total_amount = 0
+#                 for item in validated_cart:
+#                     product = Product.objects.get(id=item['product_id'])
+#                     product_quantity = int(product.quantity)
+#                     print(f"Product quantity: {product_quantity} (type: {type(product_quantity)}), Requested: {item['quantity']} (type: {type(item['quantity'])})")
+#                     if product_quantity < item['quantity']:
+#                         order.delete()
+#                         return Response(
+#                             {'error': f'Only {product_quantity} of {product.name} available'},
+#                             status=status.HTTP_400_BAD_REQUEST
+#                         )
+#                     product.quantity = product_quantity - item['quantity']
+#                     product.save()
+#                     print(f"Updated product {product.id} quantity to {product.quantity}")
+#                     total_amount += float(product.price) * item['quantity']
 
-                Transaction.objects.create(
-                    user_id=request.user,
-                    order_id=order,
-                    payment_method=payment_method
-                )
-                print('Transaction created for order:', order.id)
+#                 Transaction.objects.create(
+#                     user_id=request.user,
+#                     order_id=order,
+#                     payment_method=payment_method
+#                 )
+#                 print('Transaction created for order:', order.id)
 
-                response_data = serializer.data
-                response_data['total_amount'] = total_amount
-                return Response(response_data, status=status.HTTP_201_CREATED)
-            print('OrderSerializer errors:', serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Product.DoesNotExist:
-            return Response({'error': 'One or more products not found'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            print('Unexpected error:', str(e))
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#                 response_data = serializer.data
+#                 response_data['total_amount'] = total_amount
+#                 return Response(response_data, status=status.HTTP_201_CREATED)
+#             print('OrderSerializer errors:', serializer.errors)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except Product.DoesNotExist:
+#             return Response({'error': 'One or more products not found'}, status=status.HTTP_404_NOT_FOUND)
+#         except Exception as e:
+#             print('Unexpected error:', str(e))
+#             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class SendReceiptView(APIView):
     permission_classes = [IsAuthenticated]

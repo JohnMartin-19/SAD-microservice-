@@ -46,34 +46,34 @@ class Product(models.Model):
 
 
 
-class Order(models.Model):
-    product = models.ForeignKey(Product,on_delete=models.PROTECT,null=True, blank=True)
-    placed_by_id = models.CharField(max_length=100, blank=False,null=True)
-    date_ordered = models.DateTimeField(auto_now_add=True, blank=False)
-    complete= models.BooleanField(blank=True, null=True)
-    transaction_id = models.CharField(max_length=40,null=True, blank=True )
-    quantity = models.PositiveIntegerField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=[
-        ('Pending', 'Pending'),
-        ('Shipped', 'Shipped'),
-        ('Delivered', 'Delivered'),
-    ], default='Pending')
-    # Added for user details and shipping
-    name = models.CharField(max_length=100, blank=True)
-    email = models.EmailField(blank=True)
-    phone = models.CharField(max_length=20, blank=True)
-    address = models.CharField(max_length=200, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    postal_code = models.CharField(max_length=20, blank=True)
+# class Order(models.Model):
+#     product = models.ForeignKey(Product,on_delete=models.PROTECT,null=True, blank=True)
+#     placed_by_id = models.CharField(max_length=100, blank=False,null=True)
+#     date_ordered = models.DateTimeField(auto_now_add=True, blank=False)
+#     complete= models.BooleanField(blank=True, null=True)
+#     transaction_id = models.CharField(max_length=40,null=True, blank=True )
+#     quantity = models.PositiveIntegerField(blank=True, null=True)
+#     status = models.CharField(max_length=20, choices=[
+#         ('Pending', 'Pending'),
+#         ('Shipped', 'Shipped'),
+#         ('Delivered', 'Delivered'),
+#     ], default='Pending')
+#     # Added for user details and shipping
+#     name = models.CharField(max_length=100, blank=True)
+#     email = models.EmailField(blank=True)
+#     phone = models.CharField(max_length=20, blank=True)
+#     address = models.CharField(max_length=200, blank=True)
+#     city = models.CharField(max_length=100, blank=True)
+#     postal_code = models.CharField(max_length=20, blank=True)
 
 
-    def __str__(self):
-        return self.transaction_id or f"Order {self.id}"
+#     def __str__(self):
+#         return self.transaction_id or f"Order {self.id}"
     
 
 class ProductOrder(models.Model):
     product = models.ForeignKey(Product, on_delete = models.PROTECT)
-    order = models.ForeignKey(Order, on_delete = models.PROTECT)
+    # order = models.ForeignKey(Order, on_delete = models.PROTECT)
     quantity = models.PositiveIntegerField(default=1,null=True, blank=True)
     date_added = models.DateField(auto_created=True, blank=True)
    

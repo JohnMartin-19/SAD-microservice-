@@ -259,7 +259,7 @@ class SendReceiptView(APIView):
 class STKPushAPIView(APIView):
     
     permission_classes = [AllowAny]
-    
+    authentication_classes = []
     
     @staticmethod
     def get_access_token():
